@@ -1,0 +1,30 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'cdr' => [
+        'host' => 'localhost',
+        'port' => 3306,
+        'name' => 'asteriskcdrdb',
+        'user' => 'smartreport',
+        'pass' => '',
+        'charset' => 'utf8mb4',
+    ],
+    'asterisk' => [
+        'host' => 'localhost',
+        'port' => 3306,
+        'name' => 'asterisk',
+        'user' => 'asteriskuser',
+        'pass' => '',
+        'charset' => 'utf8mb4',
+    ],
+    'ami' => [
+        'enabled' => false,
+        'host' => '127.0.0.1',
+        'port' => 5038,
+        'username' => 'admin',
+        'password' => '',
+    ],
+    'monitor_dir' => '/var/spool/asterisk/monitor',
+];
