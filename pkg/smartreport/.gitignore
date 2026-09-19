@@ -1,0 +1,8 @@
+/config/database.php
+/config/external.php
+/data/cache/*
+/data/logs/*
+/data/*.lock
+/storage/exports/*
+/tmp/*
+!.gitkeep
