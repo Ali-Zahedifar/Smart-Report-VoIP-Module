@@ -56,8 +56,11 @@
                 <td><span class="badge badge-<?= e(missed_badge_class(isset($row['missedReason']) ? $row['missedReason'] : 'noanswer')) ?>"><?= e(t('missed.' . (isset($row['missedReason']) ? $row['missedReason'] : 'noanswer'))) ?></span></td>
                 <td class="nowrap">
                     <?php if (!empty($row['recordingUniqueid'])): ?>
-                        <a class="btn btn-ghost btn-sm" href="<?= e(url('/calls/audio?uniqueid=' . $row['recordingUniqueid'] . '&mode=inline')) ?>">
+                        <button type="button" class="btn btn-ghost btn-sm" data-audio-url="<?= e(url('/calls/audio?uniqueid=' . rawurlencode($row['recordingUniqueid']) . '&mode=inline')) ?>" data-audio-title="<?= e(t('missed.title') . ' — ' . $row['calldate']) ?>" title="<?= e(t('calls.play')) ?>">
                             <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                        </button>
+                        <a class="btn btn-ghost btn-sm" href="<?= e(url('/calls/audio?uniqueid=' . rawurlencode($row['recordingUniqueid']) . '&mode=download')) ?>" title="<?= e(t('calls.download')) ?>">
+                            <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         </a>
                     <?php endif; ?>
                     <?php if ((isset($row['leg_count']) ? $row['leg_count'] : 1) > 1): ?>
@@ -128,15 +131,3 @@
     'perPage' => $perPage,
     'queryString' => $queryString,
 ]) ?>
-
-<script>
-document.addEventListener('click', function(e) {
-    const btn = e.target.closest('.btn-legs');
-    if (btn) {
-        const target = document.getElementById(btn.dataset.target);
-        if (target) {
-            target.style.display = target.style.display === 'none' ? '' : 'none';
-        }
-    }
-});
-</script>

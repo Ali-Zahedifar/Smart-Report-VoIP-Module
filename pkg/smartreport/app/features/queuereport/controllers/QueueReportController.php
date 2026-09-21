@@ -90,9 +90,10 @@ class QueueReportController extends Controller
 
     public function detail()
     {
-        $queue = $this->query('queue', '');
+        $queue = trim((string) $this->query('queue', ''));
         if ($queue === '') {
-            $this->redirect('/queue-report', 'Queue not specified', 'error');
+            // Safety net: normal navigation always carries an explicit queue=.
+            $this->redirect('/queue-report', t('queue_report.queue_not_specified'), 'error');
         }
         
         $filters = $this->filtersFromRequest();

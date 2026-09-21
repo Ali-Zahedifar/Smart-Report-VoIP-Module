@@ -47,7 +47,8 @@
                 <td class="nowrap"><?= e($queue['service_level_30']) ?>%</td>
                 <td class="nowrap"><?= e($queue['service_level_60']) ?>%</td>
                 <td class="nowrap">
-                    <a class="btn btn-ghost btn-sm" href="<?= e(url('/queue-report/detail?queue=' . $queue['queue'] . '&' . $queryString)) ?>">
+                    <?php // queue= goes last so it cannot be overridden by the pagination string ?>
+                    <a class="btn btn-ghost btn-sm" href="<?= e(url('/queue-report/detail?' . $queryString . '&queue=' . rawurlencode($queue['queue']))) ?>">
                         <?= e(t('queue_report.view_detail')) ?>
                     </a>
                 </td>

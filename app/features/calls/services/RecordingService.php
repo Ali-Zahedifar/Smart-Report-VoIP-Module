@@ -33,7 +33,7 @@ class RecordingService
         return $this->monitorDir;
     }
 
-    public function resolve(array $cdrRow = null)
+    public function resolve($cdrRow = null)
     {
         if ($cdrRow === null) {
             return null;

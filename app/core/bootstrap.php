@@ -7,7 +7,7 @@ use SmartReport\Core\Log;
 error_reporting(E_ALL);
 ini_set('log_errors', '1');
 
-define('SMR_VERSION', '1.1.0');
+define('SMR_VERSION', '1.1.1');
 define('SMR_APP', SMR_ROOT . '/app');
 define('SMR_CONFIG', SMR_ROOT . '/config');
 define('SMR_TEMPLATES', SMR_APP . '/templates');

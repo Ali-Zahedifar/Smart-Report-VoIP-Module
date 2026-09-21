@@ -2,7 +2,7 @@
 
 return [
     'name' => 'Smart-Report',
-    'version' => '1.1.0',
+    'version' => '1.1.1',
     'debug' => false,
     'session_name' => 'smr_session',
     'cookie_lifetime' => 86400,

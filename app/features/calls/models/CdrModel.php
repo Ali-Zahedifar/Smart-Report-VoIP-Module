@@ -380,7 +380,7 @@ class CdrModel
         return $out;
     }
 
-    private function classifyEntry(ReferenceRepository $ref, array $entry, array $legs = null)
+    private function classifyEntry(ReferenceRepository $ref, array $entry, $legs = null)
     {
         if ($legs === null) {
             $legs = [$entry];
@@ -431,7 +431,7 @@ class CdrModel
      * The Asterisk reference data (extensions, DIDs, trunks) enriches the result;
      * everything we learn from the CDR table itself also feeds the reference repo.
      */
-    private function classifyDirection(ReferenceRepository $ref, array $entry, array $legs = null)
+    private function classifyDirection(ReferenceRepository $ref, array $entry, $legs = null)
     {
         if ($legs === null) {
             $legs = [$entry];

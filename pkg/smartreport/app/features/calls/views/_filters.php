@@ -12,6 +12,7 @@ if (!in_array($currentLimit, $limitChoices, true)) {
 ?>
 <section class="card filters">
     <form method="get" action="<?= e(url($route)) ?>" class="form filters-grid">
+        <input type="hidden" name="route" value="<?= e($route) ?>">
         <div class="field">
             <label for="date_from"><?= e(t('calls.date_from')) ?></label>
             <input type="date" id="date_from" name="date_from" value="<?= e(isset($filters['date_from']) ? $filters['date_from'] : '') ?>">

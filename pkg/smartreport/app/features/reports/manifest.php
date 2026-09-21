@@ -20,6 +20,10 @@ return [
             'SmartReport\Features\Reports\Controllers\ReportsController@data',
             ['root', 'admin', 'viewer'],
         ],
+        'POST /reports/charts' => [
+            'SmartReport\Features\Reports\Controllers\ReportsController@saveCharts',
+            ['root'],
+        ],
     ],
     'roles' => ['root', 'admin', 'viewer'],
     'requires_ami' => false,

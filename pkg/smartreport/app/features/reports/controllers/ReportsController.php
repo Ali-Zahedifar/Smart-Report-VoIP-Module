@@ -2,17 +2,61 @@
 
 namespace SmartReport\Features\Reports\Controllers;
 
+use SmartReport\Core\Auth;
+use SmartReport\Core\App;
 use SmartReport\Core\Controller;
 use SmartReport\Features\Calls\Models\CdrModel;
-use SmartReport\Features\Calls\Services\ReferenceRepository;
 
 class ReportsController extends Controller
 {
+    /** @var string[] All chart canvas ids in display order. */
+    private $allChartIds = ['dirChart', 'hourChart', 'missedChart', 'talkChart', 'queueChart', 'agentChart'];
+
     public function index()
     {
+        $enabled = $this->loadEnabledCharts();
+
         $this->view(':features/reports/views/index', [
             'title' => t('reports.title'),
+            'enabled_charts' => $enabled,
+            'is_root' => (Auth::role() === 'root'),
         ]);
+    }
+
+    public function saveCharts()
+    {
+        $this->requireRole(['root']);
+
+        $requested = $this->post('charts', []);
+        $requested = is_array($requested) ? $requested : [];
+
+        $enabled = [];
+        foreach ($requested as $id) {
+            $id = is_string($id) ? trim($id) : '';
+            if ($id !== '' && in_array($id, $this->allChartIds, true) && !in_array($id, $enabled, true)) {
+                $enabled[] = $id;
+            }
+        }
+
+        App::setSetting('reports.enabled_charts', json_encode($enabled));
+
+        $this->json(['ok' => true, 'enabled' => $enabled]);
+    }
+
+    /** @return string[] */
+    private function loadEnabledCharts()
+    {
+        $saved = App::setting('reports.enabled_charts', null);
+        if (is_string($saved) && $saved !== '') {
+            $decoded = json_decode($saved, true);
+            if (is_array($decoded)) {
+                $enabled = array_values(array_intersect($this->allChartIds, array_map('strval', $decoded)));
+                if ($enabled !== []) {
+                    return $enabled;
+                }
+            }
+        }
+        return $this->allChartIds;
     }
 
     public function data()
@@ -45,23 +89,13 @@ class ReportsController extends Controller
 
             // Apply queue filter if specified
             if ($queue !== '') {
-                $facts = array_filter($facts, function ($fact) use ($queue, $legs) {
-                    $l = isset($legs[$fact['linkedid']]) ? $legs[$fact['linkedid']] : [];
-                    foreach ($l as $leg) {
-                        $dst = isset($leg['dst']) ? (string) $leg['dst'] : '';
-                        $ctx = isset($leg['dcontext']) ? (string) $leg['dcontext'] : '';
-                        if ($ctx === 'ext-queues' && $dst === $queue) {
-                            return true;
-                        }
-                    }
-                    return false;
-                });
+                $facts = $this->filterFactsByQueue($facts, $legs, $queue);
             }
 
             $data = [
                 'calls_by_direction' => $this->getCallsByDirection($facts),
                 'calls_by_hour' => $this->getCallsByHour($facts),
-                'missed_trend' => $this->getMissedTrend($model, $dateFrom, $dateTo),
+                'missed_trend' => $this->getMissedTrend($model, $dateFrom, $dateTo, $queue),
                 'talk_time_dist' => $this->getTalkTimeDistribution($facts),
                 'queue_performance' => $this->getQueuePerformance($facts, $legs),
                 'agent_performance' => $this->getAgentPerformance($facts, $legs),
@@ -109,43 +143,89 @@ class ReportsController extends Controller
         ];
     }
 
-    private function getMissedTrend(CdrModel $model, $dateFrom, $dateTo)
+    /**
+     * Missed-call trend across the requested range. One factsInRange call for
+     * the whole span (grouped per day in PHP) instead of one query set per
+     * day, and it honours the queue filter like every other chart.
+     *
+     * @return array{labels:string[],data:int[]}
+     */
+    private function getMissedTrend(CdrModel $model, $dateFrom, $dateTo, $queue = '')
     {
-        // Get last 30 days of missed calls
-        $start = new \DateTime($dateFrom);
-        $end = new \DateTime($dateTo);
-        $interval = new \DateInterval('P1D');
-
         $labels = [];
         $data = [];
+        $buckets = [];
 
-        $period = new \DatePeriod($start, $interval, $end->modify('+1 day'));
-        foreach ($period as $day) {
-            $d = $day->format('Y-m-d');
-            $labels[] = $day->format('M d');
-
-            $filters = [
-                'date_from' => $d,
-                'date_to' => $d,
-                'src' => '',
-                'dst' => '',
-                'clid' => '',
-                'disposition' => '',
-                'direction' => '',
-            ];
-
-            $facts = $model->factsInRange($filters);
-            $linkedids = [];
-            foreach ($facts as $fact) {
-                $linkedids[] = isset($fact['linkedid']) ? $fact['linkedid'] : '';
+        try {
+            $start = new \DateTime($dateFrom);
+            $end = new \DateTime($dateTo);
+            $end->modify('+1 day');
+            $period = new \DatePeriod($start, new \DateInterval('P1D'), $end);
+            foreach ($period as $day) {
+                $key = $day->format('Y-m-d');
+                $buckets[$key] = 0;
+                $labels[] = $day->format('M d');
             }
-            $legs = $model->legsForFacts($linkedids);
-            $model->applyLegs($facts, $legs);
-            $missed = $model->missedFacts($facts, 10000);
-            $data[] = count($missed);
+        } catch (\Exception $e) {
+            return ['labels' => [], 'data' => []];
         }
 
-        return ['labels' => $labels, 'data' => $data];
+        $filters = [
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
+            'src' => '',
+            'dst' => '',
+            'clid' => '',
+            'disposition' => '',
+            'direction' => 'in',
+        ];
+
+        $facts = $model->factsInRange($filters);
+        $linkedids = [];
+        foreach ($facts as $fact) {
+            $linkedids[] = isset($fact['linkedid']) ? $fact['linkedid'] : '';
+        }
+        $legs = $model->legsForFacts($linkedids);
+        $model->applyLegs($facts, $legs);
+
+        if ($queue !== '') {
+            $facts = $this->filterFactsByQueue($facts, $legs, $queue);
+        }
+
+        foreach ($facts as $fact) {
+            $legsForFact = isset($fact['legs']) && is_array($fact['legs']) ? $fact['legs'] : [$fact];
+            if (!$model->isMissedCall($fact, $legsForFact)) {
+                continue;
+            }
+            $ts = strtotime((string) (isset($fact['calldate']) ? $fact['calldate'] : ''));
+            if ($ts === false) {
+                continue;
+            }
+            $key = date('Y-m-d', $ts);
+            if (isset($buckets[$key])) {
+                $buckets[$key]++;
+            }
+        }
+
+        return ['labels' => $labels, 'data' => array_values($buckets)];
+    }
+
+    /** Keep only facts whose call hit the given queue (ext-queues leg). */
+    private function filterFactsByQueue(array $facts, array $legs, $queue)
+    {
+        $out = [];
+        foreach ($facts as $fact) {
+            $l = isset($legs[$fact['linkedid']]) ? $legs[$fact['linkedid']] : [];
+            foreach ($l as $leg) {
+                $dst = isset($leg['dst']) ? (string) $leg['dst'] : '';
+                $ctx = isset($leg['dcontext']) ? (string) $leg['dcontext'] : '';
+                if ($ctx === 'ext-queues' && $dst === $queue) {
+                    $out[] = $fact;
+                    break;
+                }
+            }
+        }
+        return $out;
     }
 
     private function getTalkTimeDistribution(array $facts)

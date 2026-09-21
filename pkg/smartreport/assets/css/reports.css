@@ -21,6 +21,36 @@
     width: 100%;
 }
 
+#queueChart { cursor: pointer; }
+
+.toggles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px 16px;
+    padding: 4px 0;
+}
+
+.toggle-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.toggle-item input { margin: 0; }
+
+.card-foot {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border, #e2e8f0);
+    margin-top: 12px;
+}
+
 .chart-card.wide .chart-wrap {
     height: 350px;
 }

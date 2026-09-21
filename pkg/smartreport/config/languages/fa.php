@@ -111,6 +111,10 @@ return [
     'reports.talk_time_dist' => 'توزیع زمان مکالمه',
     'reports.queue_performance' => 'عملکرد صف‌ها',
     'reports.agent_performance' => 'عملکرد اپراتورها',
+    'reports.chart_toggles' => 'نمایش نمودارها',
+    'reports.chart_toggles_hint' => 'انتخاب کنید کدام نمودارها در این صفحه نمایش داده شوند.',
+    'reports.save_chart_toggles' => 'ذخیره تنظیمات نمودارها',
+    'reports.toggles_saved' => 'تنظیمات نمودارها ذخیره شد.',
 
     'internal.title' => 'تماس‌های داخلی',
     'internal.subtitle' => 'مشاهده تماس‌های داخلی',
@@ -133,7 +137,8 @@ return [
     'queue_report.service_level_60' => 'SL ۶۰ث',
     'queue_report.export_csv' => 'خروجی CSV',
     'queue_report.view_detail' => 'مشاهده جزئیات',
-    'queue_report.detail_title' => 'جزئیات صف %s',
+    'queue_report.detail_title' => 'جزئیات صف %queue%',
+    'queue_report.queue_not_specified' => 'صف مشخص نشده است.',
     'queue_report.showing' => 'نمایش',
     'queue_report.of' => 'از',
     'queue_report.queues' => 'صف‌ها',
@@ -145,6 +150,7 @@ return [
     'queue_report.avg_talk' => 'میانگین مکالمه',
     'queue_report.no_agent_data' => 'داده اپراتوری موجود نیست',
     'queue_report.no_queue_data' => 'داده صف موجود نیست',
+    'queue_report.actions' => 'عملیات',
 
     'status.ANSWERED' => 'پاسخ داده شده',
     'status.NO ANSWER' => 'بدون پاسخ',

@@ -29,6 +29,23 @@
         </main>
     </div>
 </div>
+
+<div class="modal" id="audioModal" role="dialog" aria-modal="true" aria-label="<?= e(t('calls.play')) ?>">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3 data-audio-title><?= e(t('calls.play')) ?></h3>
+            <div class="modal-actions">
+                <a class="btn btn-ghost btn-sm" data-audio-download href="#" download title="<?= e(t('calls.download')) ?>"><?= icon('download', 14) ?></a>
+                <button type="button" class="btn btn-ghost btn-sm" data-audio-close aria-label="<?= e(t('common.close')) ?>"><?= e(t('common.close')) ?></button>
+            </div>
+        </div>
+        <div class="modal-body">
+            <audio controls preload="none"></audio>
+            <p class="modal-empty" style="display: none;"><?= e(t('calls.no_recordings')) ?></p>
+        </div>
+    </div>
+</div>
+
     <script src="<?= e(asset('js/app.js')) ?>" defer></script>
     <script>window.SMR_BASE = <?= json_encode(SMR_BASE_URL) ?>;</script>
 </body>

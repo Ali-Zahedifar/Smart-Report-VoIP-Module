@@ -2,21 +2,43 @@
 
 This runbook covers uploading the release to an Issabel 4 or 5 server and validating it after installation. The release has been verified locally end-to-end: every PHP file lints under **real PHP 5.4.45, 5.6.40 and 8.2**, the included `tests/phpcompat.php` harness reports `PASS`, and a full HTTP smoke test of every page and action returned green.
 
+**What's new in 1.1.1:** fixes and refinements to the call-center reporting UI —
+
+- **Queue Report detail links fixed.** The "View Detail" link could lose its `queue=` parameter (an empty `queue=` from the shared filter string overrode the real value), producing a "Queue not specified" redirect. The explicit queue now always wins; the detail heading renders correctly in both languages.
+- **Legs expander fixed on all tables.** The dot + count button now expands call legs on Calls, Missed and Internal lists. (Linkedids contain a dot, which broke the old CSS-selector-based toggle; the handler is now id-based and bound once, delegated.)
+- **Recording playback opens in a modal on the same page** (Esc / backdrop / Close to dismiss, download button inside). Missed/Internal lists no longer navigate to a bare audio page. If the recording file is missing on disk, the modal shows a friendly "no recording" message instead of an empty player.
+- **Graphical Reports hardening.** Root's per-chart enable/disable card is now functional (saves per-chart visibility with CSRF protection; changes apply without reload). The missed-calls trend computes from one range query instead of one query set per day — noticeably faster on busy servers — and now honours the queue filter. Date inputs no longer visibly jump on load: defaults (last 30 days) render server-side.
+- **Queue Performance drill-down.** Clicking a queue's bar in the Graphical Reports queue chart opens that queue's detail view for the selected date range.
+- **Packaging/compat.** PHP 5.4–8.x compatibility harness passes; `RecordingService::resolve()` no longer triggers a PHP 8.4 deprecation; duplicate Chart.js include removed from the queue detail page.
+
 **What's new in 1.1.0:** a dashboard **direction filter** (all / incoming / outgoing / internal) that recomputes the stat cards and lists, a **Missed inbound calls** section (voicemail / no-answer / busy / cancelled / failed buckets), a **call-centric Calls page** — one row per call (by `linkedid`, entry leg shown, extra legs expandable inline, direction badges, inline player per recorded call with working seek), and **two CSV exports** (summary and full detail). Call direction and internal/trunk detection read the Issabel **Asterisk database** (users, devices, ring groups, queues, DIDs, trunks) automatically, with a config fallback (`external.routing`) when the reference DB is unreachable.
 
 > **If you already extracted the earlier release** and got a blank page / no installer output (CLI) or an empty-body HTTP 500 (browser): the old build had autoloader path-casing bugs that only fail on Linux, and it wrote `config/*.php` as `0640 root` which the web server couldn't read. This release fixes both (a case-insensitive autoloader, `0644` config files, and a readable error page). Replace the folder instead of extracting over it — see "Replace a broken earlier deploy" below.
 
 ## Artifact
 
-- `dist/smartreport-1.1.0.tar.gz` — the release archive.
+- `dist/smartreport-1.1.1.tar.gz` — the release archive.
 
-The SHA256 checksum is provided alongside the artifact in `dist/smartreport-1.1.0.tar.gz.sha256`. Verify it after upload:
+The SHA256 checksum is provided alongside the artifact in `dist/smartreport-1.1.1.tar.gz.sha256`. Verify it after upload:
 
 ```bash
-sha256sum -c /root/smartreport-1.1.0.tar.gz.sha256   # run from the directory containing the tarball
+sha256sum -c /root/smartreport-1.1.1.tar.gz.sha256   # run from the directory containing the tarball
 ```
 
-The archive extracts to a single `smartreport/` directory and contains **no** `config/database.php`, `config/external.php`, caches, logs or exports — the installer generates those on the server.
+The archive extracts to a single `smartreport/` directory and contains **no** `config/database.php`, `config/external.php`, caches, logs, exports, or local agent notes (`agents.md`) — the installer generates the config files on the server.
+
+### Rebuilding the artifact (from the repository)
+
+The release tarball is built from `pkg/smartreport/` (the packaging source) by the one-command release script. From the repository root:
+
+```bash
+scripts/build.sh             # rebuild the current version
+scripts/build.sh 1.1.2       # bump SMR_VERSION + config/app.php, then build
+```
+
+The script mirrors the repository into `pkg/smartreport`, produces `dist/smartreport-<version>.tar.gz` + `.sha256`, verifies the artifact (exclusions, extracted content, carried version) and runs the PHP compatibility harness. Builds are reproducible: identical sources yield a byte-identical tarball.
+
+`agents.md` is developer/agent documentation and intentionally stays out of the artifact (it lives only in the repository checkout). The two `config/*.php` files are generated on the server and must never be packaged.
 
 ## Requirements on the server
 
@@ -29,13 +51,13 @@ The archive extracts to a single `smartreport/` directory and contains **no** `c
 ## 1. Upload (WinSCP)
 
 1. Connect to the server with WinSCP over SFTP/SCP as `root`.
-2. Drag `dist/smartreport-1.1.0.tar.gz` to `/root/`.
+2. Drag `dist/smartreport-1.1.1.tar.gz` to `/root/`.
 
 ## 2. Extract and set permissions (SSH)
 
 ```bash
 cd /var/www/html
-tar -xzf /root/smartreport-1.1.0.tar.gz
+tar -xzf /root/smartreport-1.1.1.tar.gz
 chown -R asterisk:asterisk /var/www/html/smartreport
 chmod -R 775 /var/www/html/smartreport/data /var/www/html/smartreport/storage
 ```
@@ -53,7 +75,7 @@ The first release published to this server shipped with class files in `app/core
 ```bash
 cd /var/www/html
 rm -rf /var/www/html/smartreport
-tar -xzf /root/smartreport-1.1.0.tar.gz
+tar -xzf /root/smartreport-1.1.1.tar.gz
 chown -R asterisk:asterisk /var/www/html/smartreport
 chmod -R 775 /var/www/html/smartreport/data /var/www/html/smartreport/storage   # created by the installer
 ```
@@ -121,8 +143,12 @@ The router accepts both URL forms on input, so switching back is just editing th
 - [ ] A recorded call's inline **player** streams audio and seek/scrub works (server replies `206 Partial Content`).
 - [ ] **CSV export (summary)** and **CSV export (full)** both download for the current filter.
 - [ ] **Dashboard** direction tabs recompute the cards, *Recent calls* and the *Missed inbound* list; missed calls show a bucket label (voicemail / no-answer / busy / cancelled / failed).
-- [ ] **Graphical Reports** (`/reports`) loads 6 charts (direction, hour, missed trend, talk time, queue perf, agent perf); **Download PNG** and **Download PDF** buttons work.
-- [ ] **Queue Report** (`/queue-report`) shows queue summary table; clicking a queue opens detail view; CSV export works.
+- [ ] **Graphical Reports** (`/reports`) loads 6 charts (direction, hour, missed trend, talk time, queue perf, agent perf); **Download PNG** and **Download PDF** buttons work; date inputs show the last 30 days immediately (no visible jump on load).
+- [ ] Root only: the **chart visibility** card appears under the charts; untick a chart, save, and it disappears (applies without reload); as `admin`/`viewer` the card is hidden and saving is rejected server-side.
+- [ ] Clicking a bar in the **Queue Performance** chart opens that queue's detail view for the selected date range.
+- [ ] **Queue Report** (`/queue-report`) shows the queue summary table; **View Detail opens the correct queue's detail page from every row, including filtered lists** (no "Queue not specified" redirect); CSV export works.
+- [ ] On Calls / Missed / Internal lists, the **legs button (dot + number) expands and collapses** the call-legs sub-table.
+- [ ] **Recording playback opens a modal on the same page** (Missed/Internal play button); a call without a recording file on disk shows a "no recording" message instead of an empty player; the download icon still fetches the file.
 - [ ] **Settings → Users / Modules / Profile** load; change the root password and confirm re-login.
 - [ ] Language switch (top bar) toggles to Persian and the layout becomes right-to-left.
 - [ ] Role check: a user with role `viewer` can open dashboard/calls/reports/queue-report/export but is **denied** `/settings` (403).
@@ -139,7 +165,7 @@ sudo -u asterisk ls -la /var/spool/asterisk/monitor/$(date +%Y)/$(date +%m)/$(da
 mysqldump smartreport > /root/smartreport-backup-$(date +%F).sql
 # extract the new archive over the existing folder, keeping config/database.php and config/external.php
 cd /var/www/html
-tar -xzf /root/smartreport-1.1.0.tar.gz
+tar -xzf /root/smartreport-1.1.1.tar.gz
 cd smartreport
 sudo php install/installer.php --non-interactive --mysql-user=root --mysql-pass='YOUR-ROOT-DB-PASS'
 ```

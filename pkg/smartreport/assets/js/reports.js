@@ -133,9 +133,104 @@ function renderTalkChart(data) {
     });
 }
 
+// Chart enable/disable (root) + drill-down config read from #reportConfig
+let chartLabels = {};
+
+function getReportConfig() {
+    return document.getElementById('reportConfig');
+}
+
+function applyChartVisibility(enabled) {
+    Object.keys(chartLabels).forEach(id => {
+        const card = document.querySelector('.chart-card[data-chart="' + id + '"]');
+        if (!card) return;
+        if (enabled.indexOf(id) === -1) {
+            card.style.display = 'none';
+            if (charts[id]) {
+                charts[id].destroy();
+                delete charts[id];
+            }
+        } else {
+            card.style.display = '';
+        }
+    });
+}
+
+function chartEnabled(id) {
+    const card = document.querySelector('.chart-card[data-chart="' + id + '"]');
+    return !!(card && card.style.display !== 'none');
+}
+
+function initChartToggles() {
+    const config = getReportConfig();
+    if (!config) return;
+
+    let labels = {};
+    try { labels = JSON.parse(config.dataset.chartLabels || '{}'); } catch (e) { labels = {}; }
+    chartLabels = labels;
+
+    let enabled = [];
+    try { enabled = JSON.parse(config.dataset.enabledCharts || '[]'); } catch (e) { enabled = []; }
+    if (!Array.isArray(enabled) || enabled.length === 0) {
+        enabled = Object.keys(labels);
+    }
+
+    applyChartVisibility(enabled);
+
+    const toggleWrap = document.getElementById('chartToggles');
+    if (!toggleWrap) return; // non-root roles have no toggles card
+
+    toggleWrap.innerHTML = '';
+    Object.keys(labels).forEach(id => {
+        const item = document.createElement('label');
+        item.className = 'toggle-item';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.value = id;
+        input.checked = enabled.indexOf(id) !== -1;
+        item.appendChild(input);
+        item.appendChild(document.createTextNode(labels[id]));
+        toggleWrap.appendChild(item);
+    });
+
+    const saveBtn = document.getElementById('saveChartToggles');
+    if (!saveBtn) return;
+    saveBtn.addEventListener('click', async () => {
+        const selected = Array.prototype.map.call(
+            toggleWrap.querySelectorAll('input[type="checkbox"]:checked'),
+            input => input.value
+        );
+        const body = selected.map(v => 'charts[]=' + encodeURIComponent(v)).join('&')
+            + '&_csrf=' + encodeURIComponent(config.dataset.csrf || '');
+        try {
+            const res = await fetch(config.dataset.saveUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body
+            });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const payload = await res.json();
+            if (!payload || !payload.ok) throw new Error(payload && payload.error ? payload.error : 'Save failed');
+            applyChartVisibility(payload.enabled || selected);
+            const saved = document.getElementById('toggleSaved');
+            if (saved) {
+                saved.style.display = '';
+                setTimeout(() => { saved.style.display = 'none'; }, 2500);
+            }
+        } catch (e) {
+            showError('Failed to save chart settings: ' + e.message);
+        }
+    });
+}
+
 function renderQueueChart(data) {
     const ctx = document.getElementById('queueChart').getContext('2d');
     const queues = data.queue_performance;
+
+    if (charts.queueChart) {
+        charts.queueChart.destroy();
+        delete charts.queueChart;
+    }
 
     if (queues.length === 0) {
         ctx.font = '14px sans-serif';
@@ -166,7 +261,27 @@ function renderQueueChart(data) {
             responsive: true,
             maintainAspectRatio: true,
             scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
-            plugins: { legend: { position: 'bottom' } }
+            plugins: { legend: { position: 'bottom' } },
+            onClick: (evt, elements) => {
+                if (!elements.length) return;
+                const config = getReportConfig();
+                const base = config ? (config.dataset.queueDetailBase || '') : '';
+                if (!base) return;
+                const item = queues[elements[0].index];
+                if (!item || !item.queue) return;
+                const params = new URLSearchParams({
+                    date_from: document.getElementById('date_from').value,
+                    date_to: document.getElementById('date_to').value,
+                    queue: item.queue
+                });
+                window.location.href = base + '?' + params.toString();
+            },
+            onHover: (evt, elements) => {
+                const native = evt.native || evt;
+                if (native && native.target) {
+                    native.target.style.cursor = elements.length ? 'pointer' : 'default';
+                }
+            }
         }
     });
 }
@@ -222,12 +337,19 @@ function updateQueueFilter(queues) {
 }
 
 function showLoading(show) {
-    document.getElementById('reportLoading').style.display = show ? 'block' : 'none';
-    document.getElementById('reportError').style.display = 'none';
+    const loading = document.getElementById('reportLoading');
+    if (!loading) return;
+    loading.style.display = show ? 'block' : 'none';
+    const error = document.getElementById('reportError');
+    if (error) error.style.display = 'none';
 }
 
 function showError(message) {
     const errorEl = document.getElementById('reportError');
+    if (!errorEl) {
+        console.error('Report error:', message);
+        return;
+    }
     errorEl.textContent = message;
     errorEl.style.display = 'block';
 }
@@ -237,12 +359,12 @@ async function loadReports() {
     try {
         const data = await fetchReportData();
 
-        renderDirectionChart(data);
-        renderHourChart(data);
-        renderMissedChart(data);
-        renderTalkChart(data);
-        renderQueueChart(data);
-        renderAgentChart(data);
+        if (chartEnabled('dirChart')) renderDirectionChart(data);
+        if (chartEnabled('hourChart')) renderHourChart(data);
+        if (chartEnabled('missedChart')) renderMissedChart(data);
+        if (chartEnabled('talkChart')) renderTalkChart(data);
+        if (chartEnabled('queueChart')) renderQueueChart(data);
+        if (chartEnabled('agentChart')) renderAgentChart(data);
 
         updateQueueFilter(data.queue_performance);
     } catch (e) {
@@ -311,12 +433,7 @@ async function downloadAllChartsPDF() {
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Set default dates to last 30 days
-    const today = new Date();
-    const thirtyDaysAgo = new Date(today);
-    thirtyDaysAgo.setDate(today.getDate() - 30);
-    document.getElementById('date_from').value = thirtyDaysAgo.toISOString().slice(0,10);
-    document.getElementById('date_to').value = today.toISOString().slice(0,10);
+    // Dates are rendered server-side (last 30 days); no client-side overwrite.
 
     document.getElementById('refreshBtn').addEventListener('click', loadReports);
     document.getElementById('exportPdf').addEventListener('click', downloadAllChartsPDF);
@@ -330,5 +447,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => downloadChartPNG(btn.dataset.chart));
     });
 
+    initChartToggles();
     loadReports();
 });

@@ -63,7 +63,8 @@
 <section class="card">
     <div class="card-head">
         <h3><?= t('queue_report.agent_performance') ?></h3>
-        <a class="btn btn-primary btn-sm" href="<?= e(url('/queue-report/export?queue=' . $queue . '&' . $queryString)) ?>">
+        <?php // queue= goes last so it cannot be overridden by the pagination string ?>
+        <a class="btn btn-primary btn-sm" href="<?= e(url('/queue-report/export?' . $queryString . '&queue=' . rawurlencode($queue))) ?>">
             <?= t('queue_report.export_csv') ?>
         </a>
     </div>
@@ -128,4 +129,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-<script src="<?= e(asset('js/vendor/chart.min.js')) ?>"></script>

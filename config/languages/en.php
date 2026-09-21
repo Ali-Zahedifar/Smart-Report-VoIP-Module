@@ -111,6 +111,10 @@ return [
     'reports.talk_time_dist' => 'Talk Time Distribution',
     'reports.queue_performance' => 'Queue Performance',
     'reports.agent_performance' => 'Top Agent Performance',
+    'reports.chart_toggles' => 'Chart visibility',
+    'reports.chart_toggles_hint' => 'Choose which charts appear on this page.',
+    'reports.save_chart_toggles' => 'Save chart settings',
+    'reports.toggles_saved' => 'Chart settings saved.',
 
     'internal.title' => 'Internal Calls',
     'internal.subtitle' => 'View internal calls only',
@@ -133,7 +137,8 @@ return [
     'queue_report.service_level_60' => 'SL 60s',
     'queue_report.export_csv' => 'Export CSV',
     'queue_report.view_detail' => 'View Detail',
-    'queue_report.detail_title' => 'Queue %s Detail',
+    'queue_report.detail_title' => 'Queue %queue% Detail',
+    'queue_report.queue_not_specified' => 'Queue not specified.',
     'queue_report.showing' => 'Showing',
     'queue_report.of' => 'of',
     'queue_report.queues' => 'queues',
@@ -145,6 +150,7 @@ return [
     'queue_report.avg_talk' => 'Avg Talk',
     'queue_report.no_agent_data' => 'No agent data available',
     'queue_report.no_queue_data' => 'No queue data available',
+    'queue_report.actions' => 'Actions',
 
     'status.ANSWERED' => 'ANSWERED',
     'status.NO ANSWER' => 'NO ANSWER',
