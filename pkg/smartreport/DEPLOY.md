@@ -116,14 +116,16 @@ The router accepts both URL forms on input, so switching back is just editing th
 - [ ] **Settings** loads and its status shows **Module DB OK** and **CDR DB OK**.
 - [ ] **Dashboard** shows today's totals and a populated *Recent calls* table.
 - [ ] **All Calls** lists records; date/`src`/`dst`/`clid`/disposition filters work; pagination works (change rows-per-page).
-- [ ] **All Calls → Direction** filter narrows to incoming / outgoing / internal and back to all.
+- [ ] **All Calls → Direction** filter narrows to incoming / outgoing / internal / missed and back to all.
 - [ ] A call with extra legs (ring group, queue, transfer) shows one row; its **expand** button reveals the leg sub-table.
 - [ ] A recorded call's inline **player** streams audio and seek/scrub works (server replies `206 Partial Content`).
 - [ ] **CSV export (summary)** and **CSV export (full)** both download for the current filter.
 - [ ] **Dashboard** direction tabs recompute the cards, *Recent calls* and the *Missed inbound* list; missed calls show a bucket label (voicemail / no-answer / busy / cancelled / failed).
+- [ ] **Graphical Reports** (`/reports`) loads 6 charts (direction, hour, missed trend, talk time, queue perf, agent perf); **Download PNG** and **Download PDF** buttons work.
+- [ ] **Queue Report** (`/queue-report`) shows queue summary table; clicking a queue opens detail view; CSV export works.
 - [ ] **Settings → Users / Modules / Profile** load; change the root password and confirm re-login.
 - [ ] Language switch (top bar) toggles to Persian and the layout becomes right-to-left.
-- [ ] Role check: a user with role `viewer` can open dashboard/calls/export but is **denied** `/settings` (403).
+- [ ] Role check: a user with role `viewer` can open dashboard/calls/reports/queue-report/export but is **denied** `/settings` (403).
 
 If a recording does not play, confirm the path exists and is readable by the web user:
 
@@ -179,5 +181,6 @@ rm -rf /var/www/html/smartreport
 
 - **PHP 5.4 compatibility is verified with a real PHP 5.4.45 binary** (`php -l` on every file passes; `php tests/phpcompat.php` → `PASS`). Issabel 4 ships PHP 5.4 and Issabel 5 ships PHP 7.x; this release runs unchanged on both.
 - `php tests/phpcompat.php` is a regression harness shipped in the archive: it autoloads every declared class (catching path/casing problems on case-sensitive filesystems) and scans for any PHP 5.5+/5.6+/7.x/8.x-only constructs, exiting non-zero if found.
+- **Chart.js and jsPDF are bundled locally** in `assets/js/vendor/` — no CDN required, works offline.
 - The module never stores CDR or recordings; it reads `asteriskcdrdb` and the monitor directory read-only.
 - `config/database.php` and `config/external.php` are ignored by git and excluded from the artifact; treat them as secrets.

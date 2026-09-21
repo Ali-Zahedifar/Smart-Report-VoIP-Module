@@ -1,4 +1,4 @@
-<aside class="sidebar">
+﻿<aside class="sidebar">
     <div class="sidebar-brand">
         <span class="brand-mark"><?= icon('dashboard', 22) ?></span>
         <span class="brand-name"><?= e($brand) ?></span>
@@ -6,10 +6,16 @@
     <nav class="sidebar-nav">
         <?php foreach ($menuItems as $item): ?>
             <?php
-            $active = $currentRoute === $item['route']
-                || ($item['route'] !== '/' && starts($currentRoute, $item['route']));
+            $route = $item['route'];
+            $isRoot = $route === '/';
+            if ($isRoot) {
+                $active = $currentRoute === '/';
+            } else {
+                $active = $currentRoute === $route
+                    || preg_match('#^' . preg_quote($route, '#') . '(?:/|$)#', $currentRoute);
+            }
             ?>
-            <a class="nav-item<?= $active ? ' is-active' : '' ?>" href="<?= e(url($item['route'])) ?>">
+            <a class="nav-item<?= $active ? ' is-active' : '' ?>" href="<?= e(url($route)) ?>">
                 <?= icon($item['icon']) ?>
                 <span><?= e(t('nav.' . $item['label'])) ?></span>
             </a>

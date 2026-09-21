@@ -109,7 +109,7 @@ final class FeatureRegistry
     {
         $out = [];
         foreach (self::all() as $id => $feat) {
-            if (!empty($feat['enabled'])) {
+            if (!empty($feat['enabled']) || in_array($id, ['dashboard', 'settings'], true)) {
                 $out[$id] = $feat;
             }
         }
@@ -119,6 +119,9 @@ final class FeatureRegistry
     public static function isEnabled($id)
     {
         $all = self::all();
+        if (in_array($id, ['dashboard', 'settings'], true)) {
+            return isset($all[$id]);
+        }
         return isset($all[$id]) && !empty($all[$id]['enabled']);
     }
 

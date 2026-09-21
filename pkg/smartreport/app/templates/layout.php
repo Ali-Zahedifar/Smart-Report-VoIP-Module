@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex,nofollow">
     <title><?= e(isset($title) && $title !== '' ? $title . ' · ' . $brand : $brand) ?></title>
     <link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>">
+    <link rel="stylesheet" href="<?= e(asset('css/reports.css')) ?>">
 </head>
 <body class="app-body">
 <div class="app" id="app">

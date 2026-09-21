@@ -181,8 +181,10 @@ class SettingsController extends Controller
         if ($brandName !== '') {
             App::setSetting('branding.app_name', $brandName);
         }
+        $currentUser = Auth::user();
+        $isRoot = $currentUser !== null && $currentUser['role'] === 'root';
         foreach (FeatureRegistry::all() as $id => $feature) {
-            if (!empty($feature['locked'])) {
+            if (!empty($feature['locked']) && !$isRoot) {
                 continue;
             }
             $want = in_array($id, $enabled, true) ? 1 : 0;

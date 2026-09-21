@@ -2,13 +2,15 @@
 
 Smart-Report is a standalone web module for **Issabel 4 & 5** PBXs that provides detailed, useful reports and tools for **callcenters**. It reads call data from the PBX (`asteriskcdrdb`), keeps its own module database on the server, and exposes a clean multilingual panel for users, admins, and the module owner.
 
-**Current version (1.1.0)** adds call-center reporting on top of the 1.0 Foundation: a call-centric Calls page (one row per call with expandable legs), direction filtering with automatic Asterisk-DB reference data, a Missed inbound calls report, and summary/full CSV exports. The 1.0 base browsed all calls with per-call recording playback/download; more features (queue reports, live AMI tools, scheduled reports, IVR analytics, and more) are built on this base.
+**Current version (1.1.0)** adds call-center reporting on top of the 1.0 Foundation: a call-centric Calls page (one row per call with expandable legs), direction filtering with automatic Asterisk-DB reference data, a **Missed inbound calls report** (comprehensive: queues, ring groups, direct DID, IVR→ext, overflow), **Graphical Reports** (6 chart types with PNG/PDF export), **Queue Report** (per-queue + agent metrics), and summary/full CSV exports. The 1.0 base browsed all calls with per-call recording playback/download; more features (live AMI tools, scheduled reports, IVR analytics, and more) are built on this base.
 
 ## Features
 
 - **All Calls** — call-centric CDR browsing (grouped by `linkedid`): direction filter, expandable legs, date/source/destination/status filters, pagination, and **summary + full CSV export**
 - **Call recordings** — inline player with **seek support** or download, served through an authenticated endpoint with HTTP `Range` support
-- **Dashboard** — today's summary (total / answered / missed / average talk time), **direction tabs**, a **Missed inbound calls** list with reason buckets, and recent calls; direction/internal detection uses the Asterisk reference DB with a config fallback
+- **Dashboard** — today's summary (total / answered / missed / average talk time), **direction tabs** (all / incoming / outgoing / internal / missed), a **Missed inbound calls** list with reason buckets (voicemail / no-answer / busy / cancelled / failed), and recent calls; direction/internal detection uses the Asterisk reference DB with a config fallback
+- **Graphical Reports** — 6 chart types: calls by direction, calls by hour, missed calls trend (30 days), talk time distribution, queue performance, agent performance; client-side **PNG/PDF export** (Chart.js + jsPDF, works offline)
+- **Queue Report** — per-queue metrics (offered, answered, missed, abandoned, abandonment rate, avg wait/talk, service level), per-agent stats (answered, missed, avg talk), detail view, CSV export
 - **Roles & users** — `root` (module owner), `admin`, `viewer`; user management with activation and password change
 - **Modular feature registry** — each feature is self-contained and can be **enabled/disabled and rebranded** by the root user only (hidden from the customer)
 - **i18n** — English and Persian (Farsi) with automatic RTL layout

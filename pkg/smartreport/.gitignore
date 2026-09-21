@@ -5,4 +5,5 @@
 /data/*.lock
 /storage/exports/*
 /tmp/*
+/agents.md
 !.gitkeep

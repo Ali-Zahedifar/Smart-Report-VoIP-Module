@@ -2,7 +2,9 @@
 
 Smart-Report is installed on the **Issabel server itself** (it connects to the local MariaDB and reads recordings from the local filesystem).
 
-The dashboard offers a **direction filter** (all / incoming / outgoing / internal) and a **Missed inbound calls** section; the Calls page is call-centric (one row per call, expandable legs, inline recording player with seek) and exports summary or full CSV. The module reads the Issabel **Asterisk database** to classify directions and recognize extensions/queues/ring groups/DIDs/trunks; when that reference DB is unreachable it falls back to `config/external.php → routing` lists.
+The dashboard offers a **direction filter** (all / incoming / outgoing / internal / missed) and a **Missed inbound calls** section (comprehensive: queues, ring groups, direct DID, IVR→ext, overflow); the Calls page is call-centric (one row per call, expandable legs, inline recording player with seek) and exports summary or full CSV. The module reads the Issabel **Asterisk database** to classify directions and recognize extensions/queues/ring groups/DIDs/trunks; when that reference DB is unreachable it falls back to `config/external.php → routing` lists.
+
+New in 1.1.0: **Graphical Reports** (6 chart types, PNG/PDF export) and **Queue Report** (per-queue + agent metrics, detail view, CSV export).
 
 ## 1. Requirements check
 

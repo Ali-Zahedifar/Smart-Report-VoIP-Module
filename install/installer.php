@@ -203,17 +203,36 @@ out('');
 out('Configuring external connections...');
 
 $asteriskHost = isset($parsed['ast-host']) ? (string) $parsed['ast-host'] : ($hadIssabel && !empty($issabel['AMPDBHOST']) ? (string) $issabel['AMPDBHOST'] : 'localhost');
-$asteriskName = isset($parsed['ast-name']) ? (string) $parsed['ast-name'] : ($hadIssabel && !empty($issabel['AMPDBNAME']) ? (string) $issabel['AMPDBNAME'] : 'asterisk');
-$asteriskUser = isset($parsed['ast-user']) ? (string) $parsed['ast-user'] : ($hadIssabel && !empty($issabel['AMPDBUSER']) ? (string) $issabel['AMPDBUSER'] : 'asteriskuser');
-$asteriskPass = isset($parsed['ast-pass']) ? (string) $parsed['ast-pass'] : ($hadIssabel && !empty($issabel['AMPDBPASS']) ? (string) $issabel['AMPDBPASS'] : '');
+    $asteriskName = isset($parsed['ast-name']) ? (string) $parsed['ast-name'] : ($hadIssabel && !empty($issabel['AMPDBNAME']) ? (string) $issabel['AMPDBNAME'] : 'asterisk');
+    
+    // Auto-use root credentials for asterisk DB if on same host and no explicit creds provided
+    $asteriskUser = isset($parsed['ast-user']) ? (string) $parsed['ast-user'] : ($hadIssabel && !empty($issabel['AMPDBUSER']) ? (string) $issabel['AMPDBUSER'] : 'asteriskuser');
+    $asteriskPass = isset($parsed['ast-pass']) ? (string) $parsed['ast-pass'] : ($hadIssabel && !empty($issabel['AMPDBPASS']) ? (string) $issabel['AMPDBPASS'] : '');
+    
+    // Auto-detect if asterisk DB is on same host as module DB, offer to use root creds
+    $useRootForAsterisk = ($asteriskHost === $args['mysql-host'] || $asteriskHost === 'localhost') && $asteriskPass === '' && !isset($parsed['ast-pass']);
+    if ($useRootForAsterisk) {
+        $asteriskUser = $args['mysql-user'];
+        $asteriskPass = (string) $args['mysql-pass'];
+        out('  Asterisk: Auto-using root credentials (same host)');
+    }
 
-$cdrHost = isset($parsed['cdr-host']) ? (string) $parsed['cdr-host'] : ($hadCdr && !empty($cdrConf['dbhost']) ? (string) $cdrConf['dbhost'] : 'localhost');
-$cdrName = isset($parsed['cdr-name']) ? (string) $parsed['cdr-name'] : ($hadCdr && !empty($cdrConf['dbname']) ? (string) $cdrConf['dbname'] : 'asteriskcdrdb');
-$cdrUser = isset($parsed['cdr-user']) ? (string) $parsed['cdr-user'] : ($hadCdr && !empty($cdrConf['dbuser']) ? (string) $cdrConf['dbuser'] : 'asteriskuser');
-$cdrPass = isset($parsed['cdr-pass']) ? (string) $parsed['cdr-pass'] : ($hadCdr && !empty($cdrConf['dbpass']) ? (string) $cdrConf['dbpass'] : '');
+    $cdrHost = isset($parsed['cdr-host']) ? (string) $parsed['cdr-host'] : ($hadCdr && !empty($cdrConf['dbhost']) ? (string) $cdrConf['dbhost'] : 'localhost');
+    $cdrName = isset($parsed['cdr-name']) ? (string) $parsed['cdr-name'] : ($hadCdr && !empty($cdrConf['dbname']) ? (string) $cdrConf['dbname'] : 'asteriskcdrdb');
+    
+    // Auto-detect if CDR DB is on same host as module DB, offer to use root creds
+    $cdrUser = isset($parsed['cdr-user']) ? (string) $parsed['cdr-user'] : ($hadCdr && !empty($cdrConf['dbuser']) ? (string) $cdrConf['dbuser'] : 'asteriskuser');
+    $cdrPass = isset($parsed['cdr-pass']) ? (string) $parsed['cdr-pass'] : ($hadCdr && !empty($cdrConf['dbpass']) ? (string) $cdrConf['dbpass'] : '');
+    
+    $useRootForCdr = ($cdrHost === $args['mysql-host'] || $cdrHost === 'localhost') && $cdrPass === '' && !isset($parsed['cdr-pass']);
+    if ($useRootForCdr) {
+        $cdrUser = $args['mysql-user'];
+        $cdrPass = (string) $args['mysql-pass'];
+        out('  CDR: Auto-using root credentials (same host)');
+    }
 
-out('  CDR:      ' . $cdrUser . '@' . $cdrHost . '/' . $cdrName . ' (password: ' . ($cdrPass !== '' ? 'set' : 'EMPTY') . ')');
-out('  Asterisk: ' . $asteriskUser . '@' . $asteriskHost . '/' . $asteriskName . ' (password: ' . ($asteriskPass !== '' ? 'set' : 'EMPTY') . ')');
+out('  CDR:      ' . $cdrUser . '@' . $cdrHost . '/' . $cdrName . ' (password: ' . ($cdrPass !== '' ? 'set' : 'EMPTY') . ($useRootForCdr ? ' [auto-root]' : '') . ')');
+    out('  Asterisk: ' . $asteriskUser . '@' . $asteriskHost . '/' . $asteriskName . ' (password: ' . ($asteriskPass !== '' ? 'set' : 'EMPTY') . ($useRootForAsterisk ? ' [auto-root]' : '') . ')');
 
 out('Granting read access to the Asterisk reference database...');
 $grantedRef = false;

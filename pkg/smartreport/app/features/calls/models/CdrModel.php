@@ -184,7 +184,8 @@ class CdrModel
                 continue;
             }
             if ($missedOnly) {
-                if ((string) (isset($fact['direction']) ? $fact['direction'] : '') !== 'in' || !empty($fact['humanAnswered'])) {
+                $legs = isset($fact['legs']) && is_array($fact['legs']) ? $fact['legs'] : [$fact];
+                if (!$this->isMissedCall($fact, $legs)) {
                     continue;
                 }
             }
@@ -339,7 +340,9 @@ class CdrModel
                 $answered++;
                 $talkTotal += (int) $fact['talkTime'];
             }
-            if ($fact['direction'] === 'in' && empty($fact['humanAnswered'])) {
+            // Use comprehensive missed call detection for stats
+            $legs = isset($fact['legs']) && is_array($fact['legs']) ? $fact['legs'] : [$fact];
+            if ($this->isMissedCall($fact, $legs)) {
                 $missed++;
                 $reason = isset($fact['missedReason']) && $fact['missedReason'] !== '' ? $fact['missedReason'] : 'noanswer';
                 if (isset($buckets[$reason])) {
@@ -364,7 +367,9 @@ class CdrModel
     {
         $out = [];
         foreach ($facts as $fact) {
-            if ($fact['direction'] !== 'in' || !empty($fact['humanAnswered'])) {
+            // Use comprehensive missed call detection
+            $legs = isset($fact['legs']) && is_array($fact['legs']) ? $fact['legs'] : [$fact];
+            if (!$this->isMissedCall($fact, $legs)) {
                 continue;
             }
             $out[] = $fact;
@@ -634,6 +639,160 @@ class CdrModel
         return false;
     }
 
+    /**
+     * Check if a channel represents a human extension (SIP/XXX, Local/XXX@...)
+     */
+    private function isExtensionChannel($channel)
+    {
+        $channel = (string) $channel;
+        if ($channel === '') {
+            return false;
+        }
+        // Local/XXX@context - check if XXX is numeric (extension)
+        if (strpos($channel, 'Local/') === 0) {
+            if (preg_match('/^Local\/(\d+)@/', $channel, $m)) {
+                $ext = (string) $m[1];
+                return $ext !== '' && $ext !== '0';
+            }
+        }
+        // SIP/XXX-, SIP/XXX, PJSIP/XXX- or PJSIP/XXX (with or without call-id suffix)
+        if (preg_match('/^(SIP|PJSIP)\/(\d+)(?:-|$)/', $channel, $m)) {
+            $ext = (string) $m[2];
+            return $ext !== '' && $ext !== '0';
+        }
+        return false;
+    }
+
+    /**
+     * Check if an inbound call had the opportunity to be answered by a human.
+     * Returns true for:
+     * - Queue calls with agent legs (Local/XXX@from-queue or from-internal)
+     * - Ring group calls (multiple simultaneous Local/ legs in from-internal)
+     * - Direct DID/extension calls (from-did-direct/pstn -> Local/SIP extension)
+     * - IVR -> Extension (ivr-* -> extension leg)
+     * - Overflow to external (queue leg with external dst)
+     */
+    private function hasHumanRingingOpportunity(array $legs)
+    {
+        $localLegs = [];
+        $hasQueueAgentLeg = false;
+        $hasExtensionLeg = false;
+        $hasIvrLeg = false;
+        $hasExternalOverflow = false;
+        $hasInboundOrigin = false;
+
+        foreach ($legs as $leg) {
+            $dcontext = isset($leg['dcontext']) ? (string) $leg['dcontext'] : '';
+            $channel = isset($leg['channel']) ? (string) $leg['channel'] : '';
+            $dstchannel = isset($leg['dstchannel']) ? (string) $leg['dstchannel'] : '';
+            $lastapp = isset($leg['lastapp']) ? strtoupper((string) $leg['lastapp']) : '';
+            $dst = isset($leg['dst']) ? (string) $leg['dst'] : '';
+
+            // IVR legs (origin context, independent of automation app)
+            if (preg_match('/^ivr-\d+$/', $dcontext)) {
+                $hasIvrLeg = true;
+            }
+
+            // Inbound origin contexts (direct DID / PSTN)
+            if (in_array($dcontext, ['from-did-direct', 'from-pstn', 'from-did', 'ext-did'], true)) {
+                $hasInboundOrigin = true;
+            }
+
+            // Queue agent legs: Local/XXX@from-queue-...;2 or Local/XXX@from-internal;2
+            if (strpos($channel, 'Local/') === 0) {
+                $localLegs[] = $leg;
+                if (preg_match('/;2$/', $channel)) {
+                    if (strpos($channel, '@from-queue') !== false || strpos($channel, '@from-internal') !== false) {
+                        $hasQueueAgentLeg = true;
+                    }
+                }
+            }
+
+            // Extension legs: SIP/XXX- or Local/XXX@from-internal
+            if ($this->isExtensionChannel($channel) || $this->isExtensionChannel($dstchannel)) {
+                $hasExtensionLeg = true;
+            }
+
+            // Queue overflow to external number
+            if ($dcontext === 'ext-queues' && $this->isExternalNumber($dst)) {
+                $hasExternalOverflow = true;
+            }
+
+            // Skip automation apps (after flag detection so IVR/extension
+            // opportunity is not lost to voicemail/background handlers)
+            if (in_array($lastapp, self::$AUTOMATION_APPS, true)) {
+                continue;
+            }
+        }
+
+        // Queue with agent legs
+        if ($hasQueueAgentLeg) {
+            return true;
+        }
+
+        // Ring group: multiple Local/ legs in from-internal simultaneously
+        // (detected by multiple Local/;2 legs in from-internal with same call time)
+        $ringGroupCount = 0;
+        foreach ($localLegs as $leg) {
+            $ch = isset($leg['channel']) ? (string) $leg['channel'] : '';
+            $ctx = isset($leg['dcontext']) ? (string) $leg['dcontext'] : '';
+            if (strpos($ch, 'Local/') === 0 && preg_match('/;2$/', $ch) && $ctx === 'from-internal') {
+                $ringGroupCount++;
+            }
+        }
+        if ($ringGroupCount >= 2) {
+            return true;
+        }
+
+        // Direct DID/extension or IVR -> extension
+        if ($hasExtensionLeg && ($hasIvrLeg || $hasInboundOrigin)) {
+            return true;
+        }
+
+        // Queue overflow to external
+        if ($hasExternalOverflow) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Comprehensive missed call detection.
+     * Missed = inbound call that rang human endpoints but no human answered.
+     * Includes: queues, ring groups, direct DID, IVR->ext, overflow to external.
+     * Voicemail handled calls are counted as missed with reason 'voicemail'.
+     */
+    private function isMissedCall(array $entry, array $legs)
+    {
+        // 1. Must be inbound
+        $dir = isset($entry['direction']) ? $entry['direction'] : '';
+        if ($dir !== 'in') {
+            return false;
+        }
+
+        // 2. Must have had human ringing opportunity
+        //    (voicemail-answered calls are always counted as missed per spec)
+        $vmLeg = $this->hasVoicemailLeg($legs);
+        if (!$vmLeg && !$this->hasHumanRingingOpportunity($legs)) {
+            return false;
+        }
+
+        // 3. No human answered
+        if (!empty($entry['humanAnswered'])) {
+            return false;
+        }
+
+        // 4. Final disposition is unanswered type (including voicemail)
+        $outcome = isset($entry['outcome']) ? $entry['outcome'] : (isset($entry['disposition']) ? $entry['disposition'] : '');
+        $disp = strtoupper((string) $outcome);
+        if (!in_array($disp, ['NO ANSWER', 'BUSY', 'FAILED', 'CONGESTION', 'CANCEL', 'VOICEMAIL'], true)) {
+            return false;
+        }
+
+        return true;
+    }
+
     private function hasDisposition(array $legs, array $wanted)
     {
         $wanted = array_map('strtoupper', $wanted);
@@ -662,6 +821,56 @@ class CdrModel
             $facts[] = $this->classifyEntry($ref, $row);
         }
         return $facts;
+    }
+
+    /**
+     * Filter legacy facts for missed calls, grouping by uniqueid to avoid
+     * counting each leg as a separate missed call.
+     */
+    public function filterLegacyMissed(array $filters)
+    {
+        $range = $this->rangeParams($filters);
+        list($where, $params) = $this->legWhere($filters, $range);
+        $rows = $this->db->fetchAll(
+            'SELECT ' . $this->selectColumns() . ' FROM cdr WHERE ' . $where . ' ORDER BY calldate ASC',
+            $params
+        );
+
+        // Group by uniqueid
+        $groups = [];
+        foreach ($rows as $row) {
+            $uid = isset($row['uniqueid']) ? (string) $row['uniqueid'] : '';
+            if ($uid === '' || $uid === '0') {
+                continue;
+            }
+            $groups[$uid][] = $row;
+        }
+
+        $ref = new ReferenceRepository();
+        $ref->ensureLoaded();
+        $missed = [];
+        foreach ($groups as $uid => $legs) {
+            // Pick origin leg (first by calldate)
+            usort($legs, function ($a, $b) {
+                return strcmp((string) $a['calldate'], (string) $b['calldate']);
+            });
+            $entry = $legs[0];
+            $entry['linkedid'] = $uid;
+            $entry['leg_count'] = count($legs);
+            $fact = $this->classifyEntry($ref, $entry, $legs);
+            $fact['legs'] = $legs;
+
+            if ($this->isMissedCall($fact, $legs)) {
+                $missed[] = $fact;
+            }
+        }
+
+        // Sort by calldate desc
+        usort($missed, function ($a, $b) {
+            return strcmp((string) $b['calldate'], (string) $a['calldate']);
+        });
+
+        return $missed;
     }
 
     private function rangeParams(array $filters)

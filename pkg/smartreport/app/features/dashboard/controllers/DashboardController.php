@@ -11,7 +11,19 @@ class DashboardController extends Controller
     public function index()
     {
         $direction = (string) $this->query('dir', '');
-        if (!in_array($direction, ['in', 'out', 'int', 'missed'], true)) {
+        $allowedDirs = ['in', 'out'];
+        $features = \SmartReport\Core\FeatureRegistry::all();
+        $internalEnabled = isset($features['internal']) && !empty($features['internal']['enabled']);
+        $missedEnabled = isset($features['missed']) && !empty($features['missed']['enabled']);
+        
+        if ($internalEnabled) {
+            $allowedDirs[] = 'int';
+        }
+        if ($missedEnabled) {
+            $allowedDirs[] = 'missed';
+        }
+        
+        if (!in_array($direction, $allowedDirs, true)) {
             $direction = '';
         }
         $focusMissed = $direction === 'missed';
@@ -91,6 +103,8 @@ $factsForRecent = $facts;
             'legacy' => $legacy,
             'refMode' => isset($refMode) ? $refMode : 'patterns',
             'error' => $error,
+            'internalEnabled' => $internalEnabled,
+            'missedEnabled' => $missedEnabled,
         ]);
     }
 }

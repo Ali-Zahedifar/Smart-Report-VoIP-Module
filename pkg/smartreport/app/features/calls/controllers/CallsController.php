@@ -90,6 +90,30 @@ class CallsController extends Controller
         try {
             $model = new CdrModel();
             if ($model->isLegacy()) {
+                $missedOnly = !empty($filters['missed']);
+                if ($missedOnly) {
+                    // Legacy mode missed export - group by uniqueid
+                    $missedFacts = $model->filterLegacyMissed($filters);
+                    $headers = ['calldate', 'direction', 'clid', 'src', 'dst', 'talk_time_seconds', 'outcome', 'missed_reason', 'recording'];
+                    $data = [];
+                    foreach ($missedFacts as $fact) {
+                        $data[] = [
+                            'calldate' => isset($fact['calldate']) ? $fact['calldate'] : '',
+                            'direction' => isset($fact['direction']) ? $fact['direction'] : '',
+                            'clid' => isset($fact['clid']) ? $fact['clid'] : '',
+                            'src' => isset($fact['src']) ? $fact['src'] : '',
+                            'dst' => isset($fact['dst']) ? $fact['dst'] : '',
+                            'talk_time_seconds' => isset($fact['talkTime']) ? (int) $fact['talkTime'] : 0,
+                            'outcome' => isset($fact['outcome']) ? $fact['outcome'] : '',
+                            'missed_reason' => isset($fact['missedReason']) ? $fact['missedReason'] : '',
+                            'recording' => isset($fact['recordingfile']) ? $fact['recordingfile'] : '',
+                        ];
+                    }
+                    Audit::log('call_export', 'mode=legacy missed rows=' . count($data));
+                    ExportService::csv('smartreport_calls_missed_' . date('Ymd_His') . '.csv', $headers, $data);
+                    return;
+                }
+
                 $rows = $model->findAll($filters);
                 $headers = ['calldate', 'clid', 'src', 'dst', 'dcontext', 'duration', 'billsec', 'disposition', 'accountcode', 'uniqueid'];
                 if ($model->hasColumn('recordingfile')) {

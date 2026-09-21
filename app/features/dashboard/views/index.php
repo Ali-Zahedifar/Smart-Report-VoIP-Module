@@ -17,8 +17,12 @@
             <a class="dir-tab<?= $direction === '' ? ' is-active' : '' ?>" href="<?= e(url('/')) ?>"><?= e(t('calls.direction_all')) ?></a>
             <a class="dir-tab<?= $direction === 'in' ? ' is-active' : '' ?>" href="<?= e(url('/?dir=in')) ?>"><?= e(t('dir.in')) ?></a>
             <a class="dir-tab<?= $direction === 'out' ? ' is-active' : '' ?>" href="<?= e(url('/?dir=out')) ?>"><?= e(t('dir.out')) ?></a>
-            <a class="dir-tab<?= $direction === 'int' ? ' is-active' : '' ?>" href="<?= e(url('/?dir=int')) ?>"><?= e(t('dir.int')) ?></a>
-            <a class="dir-tab<?= $direction === 'missed' ? ' is-active' : '' ?>" href="<?= e(url('/?dir=missed')) ?>"><?= e(t('dir.missed')) ?></a>
+            <?php if ($internalEnabled): ?>
+                <a class="dir-tab<?= $direction === 'int' ? ' is-active' : '' ?>" href="<?= e(url('/?dir=int')) ?>"><?= e(t('dir.int')) ?></a>
+            <?php endif; ?>
+            <?php if ($missedEnabled): ?>
+                <a class="dir-tab<?= $direction === 'missed' ? ' is-active' : '' ?>" href="<?= e(url('/?dir=missed')) ?>"><?= e(t('dir.missed')) ?></a>
+            <?php endif; ?>
         </div>
     </section>
 

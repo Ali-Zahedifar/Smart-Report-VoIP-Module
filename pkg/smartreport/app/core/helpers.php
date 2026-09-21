@@ -188,8 +188,14 @@ function redirect_to($path)
 
 function current_path()
 {
+    static $cached = null;
+
+    if ($cached !== null) {
+        return $cached;
+    }
+
     if (PHP_SAPI === 'cli') {
-        return '/';
+        return ($cached = '/');
     }
     $uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
     $path = (string) parse_url($uri, PHP_URL_PATH);
@@ -208,7 +214,7 @@ function current_path()
     if (!starts($path, '/')) {
         $path = '/' . $path;
     }
-    return $path;
+    return ($cached = $path);
 }
 
 function partial($template, array $data = [])
@@ -227,6 +233,10 @@ function icon($name, $size = 18)
         'play' => '<polygon points="6 3 20 12 6 21 6 3"/>',
         'external' => '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>',
         'dot' => '<circle cx="12" cy="12" r="5"/>',
+        'chart' => '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+        'list' => '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+        'filter' => '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/><line x1="14" y1="21" x2="14" y2="3"/>',
+        'alert-triangle' => '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 2.86h20.94a2 2 0 0 0 1.71-2.86L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
     ];
     $body = isset($icons[$name]) ? $icons[$name] : $icons['dot'];
     return '<svg class="icon" width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $body . '</svg>';

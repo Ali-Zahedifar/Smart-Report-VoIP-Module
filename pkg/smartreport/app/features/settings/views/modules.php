@@ -18,12 +18,15 @@
             <p class="card-sub"><?= e(t('settings.modules.subtitle')) ?></p>
 
             <div class="feature-list">
-                <?php foreach ($features as $feature): ?>
+                <?php 
+                $currentUser = isset($user) ? $user : null;
+                $isRoot = $currentUser !== null && $currentUser['role'] === 'root';
+                foreach ($features as $feature): ?>
                     <div class="feature-row">
                         <label class="check">
                             <input type="checkbox" name="enabled[]" value="<?= e($feature['id']) ?>"
                                 <?= $feature['enabled'] ? ' checked' : '' ?>
-                                <?= $feature['locked'] ? ' disabled' : '' ?>>
+                                <?= ($feature['locked'] && !$isRoot) || in_array($feature['id'], ['dashboard', 'settings'], true) ? ' disabled' : '' ?>>
                             <span class="feature-name"><?= e($feature['name']) ?></span>
                         </label>
                         <div class="feature-meta">
@@ -33,6 +36,9 @@
                             <?php endif; ?>
                             <?php if ($feature['requires_ami']): ?>
                                 <span class="badge badge-warning"><?= e(t('settings.modules.requires_ami')) ?></span>
+                            <?php endif; ?>
+                            <?php if (in_array($feature['id'], ['dashboard', 'settings'], true)): ?>
+                                <span class="badge badge-info"><?= e(t('settings.modules.core')) ?></span>
                             <?php endif; ?>
                             <span class="text-muted">v<?= e($feature['version']) ?></span>
                         </div>
