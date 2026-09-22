@@ -7,6 +7,12 @@ use SmartReport\Core\Response;
 
 class RecordingService
 {
+    /**
+     * Files smaller than this are header-only artifacts (e.g. a 44-byte empty
+     * WAV that Asterisk creates and never fills) — treat them as "no recording".
+     */
+    const MIN_RECORDING_BYTES = 1024;
+
     private static $MIME = [
         'wav' => 'audio/wav',
         'mp3' => 'audio/mpeg',
@@ -45,7 +51,7 @@ class RecordingService
             }
             $seen[$candidate] = true;
             $real = realpath($candidate);
-            if ($real !== false && is_file($real) && is_readable($real)) {
+            if ($real !== false && $this->isRealRecording($real)) {
                 return $real;
             }
         }
@@ -181,10 +187,22 @@ class RecordingService
             $found = [];
         }
         foreach ($found as $file) {
-            if (is_file($file) && is_readable($file)) {
+            if ($this->isRealRecording($file)) {
                 return $file;
             }
         }
         return null;
+    }
+
+    /**
+     * A recording counts only when the file exists, is readable and is bigger
+     * than the header-only threshold — 0s calls legitimately have 44-byte WAV
+     * stubs on disk that hold no audio.
+     */
+    private function isRealRecording($path)
+    {
+        return is_file($path)
+            && is_readable($path)
+            && filesize($path) >= self::MIN_RECORDING_BYTES;
     }
 }

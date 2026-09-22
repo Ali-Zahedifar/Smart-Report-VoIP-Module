@@ -2,6 +2,19 @@
 
 This runbook covers uploading the release to an Issabel 4 or 5 server and validating it after installation. The release has been verified locally end-to-end: every PHP file lints under **real PHP 5.4.45, 5.6.40 and 8.2**, the included `tests/phpcompat.php` harness reports `PASS`, and a full HTTP smoke test of every page and action returned green.
 
+**What's new in 1.1.5:** the deploy kit — deployment redesigned after a verified-tarball/green-installer deploy kept serving an old version —
+
+- **`status.php` probe** ships at the web root: a public, DB-free page printing `served_from` (the tree the web server is actually executing), `code_version` (parsed from source), mtimes, file hashes and feature checks. Whatever it prints is the truth at that URL — panels can no longer haunt.
+- **`install/server-deploy.sh`**: one-command deploy — checksum check, serving-path discovery, preserves `config/*.php` + `data/` + `storage/`, atomic swap (previous tree kept at `smartreport.old`), installer, `systemctl restart httpd`, then **verifies served-vs-disk** and on mismatch prints the served tree, candidate directories and the Apache Alias/DocumentRoot lines that cause it.
+- The installer's reminder and this runbook now use the probe / `curl -sL` (the HTML marker sits behind the login redirect — a bare `curl -s` returns the empty 302 and *silence*, which is itself the diagnosis that the URL is not reaching your tree).
+
+**What's new in 1.1.4:** deploy-robustness batch from the first 1.1.3 field report —
+
+- **Fixed two fatals that only fire on a clean deploy.** `layout.php` and the Live Report view called `App::` without importing it (namespace resolution works differently in views), so a fresh extract 500-ed every page and the Live tab. Both now use fully-qualified calls. *These were masked on the old server by opcache serving the previous bytecode — which is also why the web root could execute new feature files against old core files.*
+- **44-byte "recordings" are no longer recordings.** Asterisk leaves header-only WAV stubs for 0s calls; `RecordingService::resolve()` now requires ≥ 1 KB (`MIN_RECORDING_BYTES`), so those rows show the muted "No recording" dash and the player refuses the stub.
+- **Installer prints the installed code version** and ends with a mandatory `systemctl restart httpd` reminder (opcache is cleared only by restarting the web server — copying new files is not enough) plus a `curl … | grep app-version` one-liner that must print the new version.
+- **Validation checklist + troubleshooting** updated with the mixed-extract symptoms: raw translation keys (`live.setup_step1`) and "undefined method `CdrModel::digits()`" mean the web root is running a *stale/mixed tree*, not that the tarball is bad — re-extract into a clean directory and restart httpd.
+
 **What's new in 1.1.3:** three new report modules, AMI live monitoring, and version-reporting hardening —
 
 - **Extension Report** (`/ext-report`): per-extension productivity over any date range — total/inbound/outbound/internal call counts, talk time, average talk, missed inbound, first/last call of the day, a talk-by-hour chart, per-extension call detail with recording playback, and CSV export. A call is attributed to every extension that appears on it (origin, destination, or a channel peer such as `SIP/105-…` / `Local/105@…`).
@@ -33,12 +46,12 @@ This runbook covers uploading the release to an Issabel 4 or 5 server and valida
 
 ## Artifact
 
-- `dist/smartreport-1.1.3.tar.gz` — the release archive.
+- `dist/smartreport-1.1.5.tar.gz` — the release archive.
 
-The SHA256 checksum is provided alongside the artifact in `dist/smartreport-1.1.3.tar.gz.sha256`. Verify it after upload:
+The SHA256 checksum is provided alongside the artifact in `dist/smartreport-1.1.5.tar.gz.sha256`. Verify it after upload:
 
 ```bash
-sha256sum -c /root/smartreport-1.1.3.tar.gz.sha256   # run from the directory containing the tarball
+sha256sum -c /root/smartreport-1.1.5.tar.gz.sha256   # run from the directory containing the tarball
 ```
 
 The archive extracts to a single `smartreport/` directory and contains **no** `config/database.php`, `config/external.php`, caches, logs, exports, or local agent notes (`agents.md`) — the installer generates the config files on the server.
@@ -49,7 +62,7 @@ The release tarball is built from `pkg/smartreport/` (the packaging source) by t
 
 ```bash
 scripts/build.sh             # rebuild the current version
-scripts/build.sh 1.1.3       # bump SMR_VERSION + config/app.php, then build
+scripts/build.sh 1.1.5       # bump SMR_VERSION + config/app.php, then build
 ```
 
 The script mirrors the repository into `pkg/smartreport`, produces `dist/smartreport-<version>.tar.gz` + `.sha256`, verifies the artifact (exclusions, extracted content, carried version) and runs the PHP compatibility harness. Builds are reproducible: identical sources yield a byte-identical tarball.
@@ -151,10 +164,11 @@ The router accepts both URL forms on input, so switching back is just editing th
 
 ## 5. Post-install validation checklist
 
+- [ ] **Version check first (use the probe):** `curl -skL https://localhost/smartreport/status.php` prints `code_version:` from the tree the web server is **actually serving** — the arbiter for every "still shows the old version" report. The flags matter on Issabel: `-L` follows the HTTP→HTTPS redirect (a bare HTTP request returns an empty 302) and `-k` accepts the self-signed certificate (**curl silently aborts with empty output on this cert without `-k`** — silence means cert abort, not "nothing served"). If it prints anything but the version you just installed, the web server is reading a different tree — see the deploy-kit row in Troubleshooting.
 - [ ] **Settings** loads and its status shows **Module DB OK** and **CDR DB OK**.
 - [ ] **Dashboard** shows today's totals and a populated *Recent calls* table.
 - [ ] **All Calls** lists records; date/`src`/`dst`/`clid`/disposition filters work; pagination works (change rows-per-page).
-- [ ] **All Calls → Direction** filter narrows to incoming / outgoing / internal / missed and back to all.
+- [ ] **All Calls → Direction** filter offers incoming / outgoing only (internal traffic has its own section; missed calls their own card); the dashboard tabs are All / In / Out.
 - [ ] A call with extra legs (ring group, queue, transfer) shows one row; its **expand** button reveals the leg sub-table.
 - [ ] A recorded call's inline **player** streams audio and seek/scrub works (server replies `206 Partial Content`).
 - [ ] **CSV export (summary)** and **CSV export (full)** both download for the current filter.
@@ -213,6 +227,12 @@ rm -rf /var/www/html/smartreport
 | `Issabel config found: no` / CDR auto-detect wrong | `/etc/issabelpbx.conf` or the cdr conf is absent or unreadable. Pass `--cdr-user/--cdr-pass` (and `--ast-user/--ast-pass`) explicitly. |
 | `php tests/phpcompat.php` reports autoload FAIL | Stale/mixed-case files left in the folder. Fix: `rm -rf smartreport` and re-extract clean. This release's autoloader resolves any directory casing, but a clean tree is always recommended. |
 | Recordings not found | Check `monitor_dir` in `config/external.php` and that the web user can read the files. |
+| Disk is new (`status.php` shows the new `code_version`) but the panel/footer still shows the **old** version | **Stale bytecode in php-fpm's opcache.** On Rocky/Issabel, PHP runs as php-fpm and its opcache survives `systemctl restart httpd` — every file can be replaced on disk while fpm keeps serving the old bytecode. Fix: `systemctl restart php-fpm` (find the exact unit with `systemctl list-units --type=service | grep -i fpm`), then Ctrl+F5. The probe exposes this: when `runtime_version` ≠ `code_version` it prints `STALE BYTECODE`. |
+| `curl -s` or `curl -sL` to the panel/probe returns **empty, silently** | Not "nothing served": Issabel redirects HTTP→HTTPS and its self-signed certificate makes curl abort mid-transfer. Use `curl -skL` (or `-k` on any curl against this box). Verified case: a checksum-verified, installer-green deploy was declared "not serving" by probes that were really dying on the cert. |
+| Panel shows the old version / new tabs missing / raw translation keys (`live.setup_step1`) / "undefined method `CdrModel::digits()`" | Run `curl -skL https://localhost/smartreport/status.php`: it prints `served_from` (the tree being executed) and `code_version`. If the tarball checksum was verified and the installer reported the new version, yet the probe serves an old one — **the web server maps the URL to another directory** (an Alias/vhost or a second copy). Find it: `grep -Rnsi smartreport /etc/httpd | grep -Ei "alias|documentroot"`, then fix the mapping or replace the directory it points at. `sh install/server-deploy.sh <tarball> ...` performs this check automatically. |
+| The one-command deploy | `sh install/server-deploy.sh /root/smartreport-<ver>.tar.gz --mysql-pass='…' --cdr-pass='…' --root-pass='…' --admin-pass='…'` — verifies checksum, discovers the serving path, preserves `config/*.php` + `data/` + `storage/`, swaps atomically (previous tree kept at `smartreport.old`), runs the installer, restarts httpd, then verifies **served vs disk** and prints a diagnosis on mismatch. Add `--selinux` on SELinux boxes. |
+| Live Report page: `Class 'App' not found` (1.1.3 only) | Fixed in 1.1.4 — upgrade; or as a stopgap add `use SmartReport\Core\App;`-equivalent fully-qualified calls. |
+| Recordings list shows a play button but the file is 44 bytes of silence | Fixed in 1.1.4: header-only WAV stubs (0s calls) are now treated as "No recording" (`MIN_RECORDING_BYTES = 1024`). |
 | Player cannot seek to a position | Expected on very old builds; 1.1.0+ streams with `Range` support (`206`), which browser sliders require. |
 | Call direction shows only "Unknown" | The panel could not reach the Asterisk DB for reference data (users/trunks/DIDs). Verify the `asterisk` credentials in `config/external.php` (re-run the installer, which also grants the module's MySQL user `SELECT` on the reference DB); otherwise populate the `external.routing` fallback lists. Direction detection only applies to CDRs that contain a `linkedid` column. |
 | Pretty URLs 404 | Expected unless pretty URLs are enabled — the panel default is plain PHP URLs (`/smartreport/index.php?route=...`), which never 404. For clean URLs see "Optional — clean pretty URLs" above. |

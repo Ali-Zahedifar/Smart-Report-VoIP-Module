@@ -53,7 +53,7 @@ write = system,call,log,verbose,command,agent,user,config,command,reporting,orig
                 <span class="muted"><span class="live-dot"></span> <?= e(t('live.auto_refresh')) ?></span>
             </div>
             <?php if ($canSpy): ?>
-                <p class="card-sub"><?= e(t('live.spy_hint')) ?> <?= e(t('live.spy_mode_' . (string) App::setting('live.spy_mode', 'listen'))) ?></p>
+                <p class="card-sub"><?= e(t('live.spy_hint')) ?> <?= e(t('live.spy_mode_' . (string) \SmartReport\Core\App::setting('live.spy_mode', 'listen'))) ?></p>
             <?php endif; ?>
             <div class="table-wrap">
                 <table class="table">
@@ -98,9 +98,9 @@ write = system,call,log,verbose,command,agent,user,config,command,reporting,orig
             <div class="field">
                 <label for="spy_mode"><?= e(t('live.spy_mode_label')) ?></label>
                 <select id="spy_mode" name="spy_mode">
-                    <option value="listen"<?= App::setting('live.spy_mode', 'listen') === 'listen' ? ' selected' : '' ?>><?= e(t('live.spy_mode_listen')) ?></option>
-                    <option value="whisper"<?= App::setting('live.spy_mode', 'listen') === 'whisper' ? ' selected' : '' ?>><?= e(t('live.spy_mode_whisper')) ?></option>
-                    <option value="barge"<?= App::setting('live.spy_mode', 'listen') === 'barge' ? ' selected' : '' ?>><?= e(t('live.spy_mode_barge')) ?></option>
+                    <option value="listen"<?= \SmartReport\Core\App::setting('live.spy_mode', 'listen') === 'listen' ? ' selected' : '' ?>><?= e(t('live.spy_mode_listen')) ?></option>
+                    <option value="whisper"<?= \SmartReport\Core\App::setting('live.spy_mode', 'listen') === 'whisper' ? ' selected' : '' ?>><?= e(t('live.spy_mode_whisper')) ?></option>
+                    <option value="barge"<?= \SmartReport\Core\App::setting('live.spy_mode', 'listen') === 'barge' ? ' selected' : '' ?>><?= e(t('live.spy_mode_barge')) ?></option>
                 </select>
             </div>
             <div class="filters-actions">

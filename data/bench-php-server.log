@@ -1,0 +1,214 @@
+[Tue Sep 22 18:18:05 2026] PHP 8.2.12 Development Server (http://127.0.0.1:8099) started
+[Tue Sep 22 18:18:09 2026] 127.0.0.1:54461 Accepted
+[Tue Sep 22 18:18:09 2026] 127.0.0.1:54461 [200]: GET /index.php?route=/login
+[Tue Sep 22 18:18:09 2026] 127.0.0.1:54461 Closing
+[Tue Sep 22 18:18:24 2026] 127.0.0.1:55447 Accepted
+[Tue Sep 22 18:18:24 2026] 127.0.0.1:55447 [200]: GET /index.php?route=/login
+[Tue Sep 22 18:18:24 2026] 127.0.0.1:55447 Closing
+[Tue Sep 22 18:18:24 2026] 127.0.0.1:55449 Accepted
+[Tue Sep 22 18:18:24 2026] 127.0.0.1:55449 [200]: GET /index.php?route=/login
+[Tue Sep 22 18:18:24 2026] 127.0.0.1:55449 Closing
+[Tue Sep 22 18:18:24 2026] 127.0.0.1:55451 Accepted
+[Tue Sep 22 18:18:24 2026] 127.0.0.1:55451 [200]: GET /assets/css/app.css?v=112
+[Tue Sep 22 18:18:24 2026] 127.0.0.1:55452 Accepted
+[Tue Sep 22 18:18:24 2026] 127.0.0.1:55452 [200]: GET /assets/css/reports.css?v=112
+[Tue Sep 22 18:18:24 2026] 127.0.0.1:55451 Closing
+[Tue Sep 22 18:18:24 2026] 127.0.0.1:55452 Closing
+[Tue Sep 22 18:18:24 2026] 127.0.0.1:55453 Accepted
+[Tue Sep 22 18:18:24 2026] 127.0.0.1:55453 [200]: GET /assets/js/app.js?v=112
+[Tue Sep 22 18:18:24 2026] 127.0.0.1:55453 Closing
+[Tue Sep 22 18:18:24 2026] 127.0.0.1:55456 Accepted
+[Tue Sep 22 18:18:24 2026] 127.0.0.1:55456 [404]: GET /favicon.ico - No such file or directory
+[Tue Sep 22 18:18:24 2026] 127.0.0.1:55456 Closing
+[Tue Sep 22 18:18:43 2026] 127.0.0.1:60943 Accepted
+[Tue Sep 22 18:18:43 2026] 127.0.0.1:60943 [302]: POST /index.php?route=%2Flogin
+[Tue Sep 22 18:18:43 2026] 127.0.0.1:60943 Closing
+[Tue Sep 22 18:18:43 2026] 127.0.0.1:60945 Accepted
+[Tue Sep 22 18:18:43 2026] 127.0.0.1:60945 [200]: GET /index.php?route=%2Flogin
+[Tue Sep 22 18:18:43 2026] 127.0.0.1:60945 Closing
+[Tue Sep 22 18:18:43 2026] 127.0.0.1:60947 Accepted
+[Tue Sep 22 18:18:43 2026] 127.0.0.1:60948 Accepted
+[Tue Sep 22 18:18:43 2026] 127.0.0.1:60947 [200]: GET /assets/css/app.css?v=112
+[Tue Sep 22 18:18:43 2026] 127.0.0.1:60948 [200]: GET /assets/css/reports.css?v=112
+[Tue Sep 22 18:18:43 2026] 127.0.0.1:60947 Closing
+[Tue Sep 22 18:18:43 2026] 127.0.0.1:60948 Closing
+[Tue Sep 22 18:18:43 2026] 127.0.0.1:60949 Accepted
+[Tue Sep 22 18:18:43 2026] 127.0.0.1:60949 [200]: GET /assets/js/app.js?v=112
+[Tue Sep 22 18:18:43 2026] 127.0.0.1:60949 Closing
+[Tue Sep 22 18:19:21 2026] 127.0.0.1:52997 Accepted
+[Tue Sep 22 18:19:22 2026] 127.0.0.1:52997 [302]: GET /
+[Tue Sep 22 18:19:22 2026] 127.0.0.1:52997 Closing
+[Tue Sep 22 18:19:22 2026] 127.0.0.1:54672 Accepted
+[Tue Sep 22 18:19:22 2026] 127.0.0.1:54672 [200]: GET /index.php?route=%2Flogin
+[Tue Sep 22 18:19:22 2026] 127.0.0.1:54672 Closing
+[Tue Sep 22 18:19:22 2026] 127.0.0.1:63040 Accepted
+[Tue Sep 22 18:19:22 2026] 127.0.0.1:63040 [200]: GET /assets/css/app.css?v=112
+[Tue Sep 22 18:19:22 2026] 127.0.0.1:63040 Closing
+[Tue Sep 22 18:19:22 2026] 127.0.0.1:59938 Accepted
+[Tue Sep 22 18:19:22 2026] 127.0.0.1:59938 [200]: GET /assets/css/reports.css?v=112
+[Tue Sep 22 18:19:22 2026] 127.0.0.1:59938 Closing
+[Tue Sep 22 18:19:22 2026] 127.0.0.1:50374 Accepted
+[Tue Sep 22 18:19:22 2026] 127.0.0.1:50374 [200]: GET /assets/js/app.js?v=112
+[Tue Sep 22 18:19:22 2026] 127.0.0.1:50374 Closing
+[Tue Sep 22 18:19:22 2026] 127.0.0.1:61516 Accepted
+[Tue Sep 22 18:19:22 2026] 127.0.0.1:61516 [404]: GET /favicon.ico - No such file or directory
+[Tue Sep 22 18:19:22 2026] 127.0.0.1:61516 Closing
+[Tue Sep 22 18:19:30 2026] 127.0.0.1:61734 Accepted
+[Tue Sep 22 18:19:30 2026] 127.0.0.1:61734 [302]: POST /index.php?route=%2Flogin
+[Tue Sep 22 18:19:30 2026] 127.0.0.1:61734 Closing
+[Tue Sep 22 18:19:30 2026] 127.0.0.1:52857 Accepted
+[Tue Sep 22 18:19:30 2026] 127.0.0.1:52857 [200]: GET /index.php?route=%2Flogin
+[Tue Sep 22 18:19:30 2026] 127.0.0.1:52857 Closing
+[Tue Sep 22 18:19:30 2026] 127.0.0.1:64151 Accepted
+[Tue Sep 22 18:19:30 2026] 127.0.0.1:64151 [200]: GET /assets/css/app.css?v=112
+[Tue Sep 22 18:19:30 2026] 127.0.0.1:64151 Closing
+[Tue Sep 22 18:19:30 2026] 127.0.0.1:50952 Accepted
+[Tue Sep 22 18:19:30 2026] 127.0.0.1:64946 Accepted
+[Tue Sep 22 18:19:30 2026] 127.0.0.1:50952 [200]: GET /assets/css/reports.css?v=112
+[Tue Sep 22 18:19:30 2026] 127.0.0.1:64946 [200]: GET /assets/js/app.js?v=112
+[Tue Sep 22 18:19:30 2026] 127.0.0.1:50952 Closing
+[Tue Sep 22 18:19:30 2026] 127.0.0.1:64946 Closing
+[Tue Sep 22 18:20:01 2026] 127.0.0.1:53349 Accepted
+[Tue Sep 22 18:20:01 2026] 127.0.0.1:53349 [200]: GET /index.php?route=/login
+[Tue Sep 22 18:20:01 2026] 127.0.0.1:53349 Closing
+[Tue Sep 22 18:20:01 2026] 127.0.0.1:53351 Accepted
+[Tue Sep 22 18:20:01 2026] 127.0.0.1:53352 Accepted
+[Tue Sep 22 18:20:01 2026] 127.0.0.1:53351 [200]: GET /assets/css/app.css?v=112
+[Tue Sep 22 18:20:01 2026] 127.0.0.1:53352 [200]: GET /assets/css/reports.css?v=112
+[Tue Sep 22 18:20:01 2026] 127.0.0.1:53351 Closing
+[Tue Sep 22 18:20:01 2026] 127.0.0.1:53352 Closing
+[Tue Sep 22 18:20:01 2026] 127.0.0.1:53353 Accepted
+[Tue Sep 22 18:20:01 2026] 127.0.0.1:53353 [200]: GET /assets/js/app.js?v=112
+[Tue Sep 22 18:20:01 2026] 127.0.0.1:53353 Closing
+[Tue Sep 22 18:20:02 2026] 127.0.0.1:63863 Accepted
+[Tue Sep 22 18:20:02 2026] 127.0.0.1:63863 [302]: POST /index.php?route=%2Flogin
+[Tue Sep 22 18:20:02 2026] 127.0.0.1:63863 Closing
+[Tue Sep 22 18:20:02 2026] 127.0.0.1:62879 Accepted
+[Tue Sep 22 18:20:02 2026] 127.0.0.1:62879 [200]: GET /index.php?route=%2F
+[Tue Sep 22 18:20:02 2026] 127.0.0.1:62879 Closing
+[Tue Sep 22 18:20:02 2026] 127.0.0.1:49674 Accepted
+[Tue Sep 22 18:20:02 2026] 127.0.0.1:49674 [200]: GET /assets/css/app.css?v=112
+[Tue Sep 22 18:20:02 2026] 127.0.0.1:49674 Closing
+[Tue Sep 22 18:20:02 2026] 127.0.0.1:55690 Accepted
+[Tue Sep 22 18:20:02 2026] 127.0.0.1:54336 Accepted
+[Tue Sep 22 18:20:02 2026] 127.0.0.1:55690 [200]: GET /assets/css/reports.css?v=112
+[Tue Sep 22 18:20:02 2026] 127.0.0.1:54336 [200]: GET /assets/js/app.js?v=112
+[Tue Sep 22 18:20:02 2026] 127.0.0.1:55690 Closing
+[Tue Sep 22 18:20:02 2026] 127.0.0.1:54336 Closing
+[Tue Sep 22 18:20:07 2026] 127.0.0.1:52929 Accepted
+[Tue Sep 22 18:20:07 2026] 127.0.0.1:52929 [200]: GET /index.php?route=%2Flive
+[Tue Sep 22 18:20:07 2026] 127.0.0.1:52929 Closing
+[Tue Sep 22 18:20:07 2026] 127.0.0.1:57877 Accepted
+[Tue Sep 22 18:20:07 2026] 127.0.0.1:57877 [200]: GET /assets/css/app.css?v=112
+[Tue Sep 22 18:20:07 2026] 127.0.0.1:57877 Closing
+[Tue Sep 22 18:20:07 2026] 127.0.0.1:58723 Accepted
+[Tue Sep 22 18:20:07 2026] 127.0.0.1:62610 Accepted
+[Tue Sep 22 18:20:07 2026] 127.0.0.1:58723 [200]: GET /assets/css/reports.css?v=112
+[Tue Sep 22 18:20:07 2026] 127.0.0.1:55513 Accepted
+[Tue Sep 22 18:20:07 2026] 127.0.0.1:58723 Closing
+[Tue Sep 22 18:20:07 2026] 127.0.0.1:62610 [200]: GET /assets/js/live.js?v=112
+[Tue Sep 22 18:20:07 2026] 127.0.0.1:55513 [200]: GET /assets/js/app.js?v=112
+[Tue Sep 22 18:20:07 2026] 127.0.0.1:62610 Closing
+[Tue Sep 22 18:20:07 2026] 127.0.0.1:55513 Closing
+[Tue Sep 22 18:20:08 2026] 127.0.0.1:50115 Accepted
+[Tue Sep 22 18:20:08 2026] 127.0.0.1:50115 [200]: GET /index.php?route=%2Finternal
+[Tue Sep 22 18:20:08 2026] 127.0.0.1:50115 Closing
+[Tue Sep 22 18:20:08 2026] 127.0.0.1:59889 Accepted
+[Tue Sep 22 18:20:08 2026] 127.0.0.1:59889 [200]: GET /assets/css/app.css?v=112
+[Tue Sep 22 18:20:08 2026] 127.0.0.1:59889 Closing
+[Tue Sep 22 18:20:08 2026] 127.0.0.1:62671 Accepted
+[Tue Sep 22 18:20:08 2026] 127.0.0.1:55314 Accepted
+[Tue Sep 22 18:20:08 2026] 127.0.0.1:62671 [200]: GET /assets/css/reports.css?v=112
+[Tue Sep 22 18:20:08 2026] 127.0.0.1:55314 [200]: GET /assets/js/app.js?v=112
+[Tue Sep 22 18:20:08 2026] 127.0.0.1:62671 Closing
+[Tue Sep 22 18:20:08 2026] 127.0.0.1:55314 Closing
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:59411 Accepted
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:59411 [200]: GET /index.php?route=%2Fext-report
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:59411 Closing
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:52735 Accepted
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:52735 [200]: GET /assets/css/app.css?v=112
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:52735 Closing
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:50798 Accepted
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:50798 [200]: GET /assets/css/reports.css?v=112
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:50798 Closing
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:50612 Accepted
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:54019 Accepted
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:50612 [200]: GET /assets/js/vendor/chart.min.js?v=112
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:54019 [200]: GET /assets/js/extreport.js?v=112
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:63321 Accepted
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:63321 [200]: GET /assets/js/app.js?v=112
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:50612 Closing
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:54019 Closing
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:63321 Closing
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:57602 Accepted
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:57602 [200]: GET /index.php?route=%2Fsettings
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:57602 Closing
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:51758 Accepted
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:51758 [200]: GET /assets/css/app.css?v=112
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:51758 Closing
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:64443 Accepted
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:61386 Accepted
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:64443 [200]: GET /assets/css/reports.css?v=112
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:61386 [200]: GET /assets/js/app.js?v=112
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:64443 Closing
+[Tue Sep 22 18:20:09 2026] 127.0.0.1:61386 Closing
+[Tue Sep 22 18:20:11 2026] 127.0.0.1:50476 Accepted
+[Tue Sep 22 18:20:11 2026] 127.0.0.1:50476 [200]: GET /index.php?route=%2Fsettings%2Fmodules
+[Tue Sep 22 18:20:11 2026] 127.0.0.1:50476 Closing
+[Tue Sep 22 18:20:11 2026] 127.0.0.1:55898 Accepted
+[Tue Sep 22 18:20:11 2026] 127.0.0.1:55898 [200]: GET /assets/css/app.css?v=112
+[Tue Sep 22 18:20:11 2026] 127.0.0.1:55898 Closing
+[Tue Sep 22 18:20:11 2026] 127.0.0.1:49894 Accepted
+[Tue Sep 22 18:20:11 2026] 127.0.0.1:49894 [200]: GET /assets/css/reports.css?v=112
+[Tue Sep 22 18:20:11 2026] 127.0.0.1:49894 Closing
+[Tue Sep 22 18:20:11 2026] 127.0.0.1:52596 Accepted
+[Tue Sep 22 18:20:11 2026] 127.0.0.1:52596 [200]: GET /assets/js/app.js?v=112
+[Tue Sep 22 18:20:11 2026] 127.0.0.1:52596 Closing
+[Tue Sep 22 18:20:12 2026] 127.0.0.1:49674 Accepted
+[Tue Sep 22 18:20:12 2026] 127.0.0.1:49674 [200]: GET /index.php?route=%2Fsettings%2Fami
+[Tue Sep 22 18:20:12 2026] 127.0.0.1:49674 Closing
+[Tue Sep 22 18:20:12 2026] 127.0.0.1:61838 Accepted
+[Tue Sep 22 18:20:12 2026] 127.0.0.1:51560 Accepted
+[Tue Sep 22 18:20:12 2026] 127.0.0.1:61141 Accepted
+[Tue Sep 22 18:20:12 2026] 127.0.0.1:61838 [200]: GET /assets/css/app.css?v=112
+[Tue Sep 22 18:20:12 2026] 127.0.0.1:51560 [200]: GET /assets/css/reports.css?v=112
+[Tue Sep 22 18:20:12 2026] 127.0.0.1:61141 [200]: GET /assets/js/app.js?v=112
+[Tue Sep 22 18:20:12 2026] 127.0.0.1:61838 Closing
+[Tue Sep 22 18:20:12 2026] 127.0.0.1:51560 Closing
+[Tue Sep 22 18:20:12 2026] 127.0.0.1:61141 Closing
+[Tue Sep 22 18:20:12 2026] 127.0.0.1:56652 Accepted
+[Tue Sep 22 18:20:12 2026] 127.0.0.1:56652 [200]: GET /index.php?route=%2Fsettings%2Fmodules
+[Tue Sep 22 18:20:12 2026] 127.0.0.1:56652 Closing
+[Tue Sep 22 18:20:13 2026] 127.0.0.1:54245 Accepted
+[Tue Sep 22 18:20:13 2026] 127.0.0.1:54245 [200]: GET /assets/css/app.css?v=112
+[Tue Sep 22 18:20:13 2026] 127.0.0.1:54245 Closing
+[Tue Sep 22 18:20:13 2026] 127.0.0.1:58863 Accepted
+[Tue Sep 22 18:20:13 2026] 127.0.0.1:59051 Accepted
+[Tue Sep 22 18:20:13 2026] 127.0.0.1:58863 [200]: GET /assets/css/reports.css?v=112
+[Tue Sep 22 18:20:13 2026] 127.0.0.1:59051 [200]: GET /assets/js/app.js?v=112
+[Tue Sep 22 18:20:13 2026] 127.0.0.1:58863 Closing
+[Tue Sep 22 18:20:13 2026] 127.0.0.1:59051 Closing
+[Tue Sep 22 18:20:21 2026] 127.0.0.1:59053 Accepted
+[Tue Sep 22 18:20:21 2026] 127.0.0.1:59053 [302]: POST /index.php?route=%2Flogin
+[Tue Sep 22 18:20:21 2026] 127.0.0.1:59053 Closing
+[Tue Sep 22 18:20:21 2026] 127.0.0.1:59055 Accepted
+[Tue Sep 22 18:20:21 2026] 127.0.0.1:59055 [200]: GET /index.php?route=%2F
+[Tue Sep 22 18:20:21 2026] 127.0.0.1:59055 Closing
+[Tue Sep 22 18:20:21 2026] 127.0.0.1:59058 Accepted
+[Tue Sep 22 18:20:21 2026] 127.0.0.1:59059 Accepted
+[Tue Sep 22 18:20:21 2026] 127.0.0.1:59058 [200]: GET /assets/css/app.css?v=112
+[Tue Sep 22 18:20:21 2026] 127.0.0.1:59059 [200]: GET /assets/css/reports.css?v=112
+[Tue Sep 22 18:20:21 2026] 127.0.0.1:59058 Closing
+[Tue Sep 22 18:20:21 2026] 127.0.0.1:59059 Closing
+[Tue Sep 22 18:20:21 2026] 127.0.0.1:59060 Accepted
+[Tue Sep 22 18:20:21 2026] 127.0.0.1:59060 [200]: GET /assets/js/app.js?v=112
+[Tue Sep 22 18:20:21 2026] 127.0.0.1:59060 Closing
+[Tue Sep 22 18:38:25 2026] 127.0.0.1:62920 Accepted
+[Tue Sep 22 18:38:25 2026] 127.0.0.1:62920 [302]: GET /index.php
+[Tue Sep 22 18:38:25 2026] 127.0.0.1:62920 Closing
+[Tue Sep 22 18:38:25 2026] 127.0.0.1:62922 Accepted
+[Tue Sep 22 18:38:25 2026] 127.0.0.1:62922 [302]: GET /index.php
+[Tue Sep 22 18:38:25 2026] 127.0.0.1:62922 Closing
+[Tue Sep 22 18:38:25 2026] 127.0.0.1:62924 Accepted
+[Tue Sep 22 18:38:25 2026] 127.0.0.1:62924 [200]: GET /index.php?route=%2Flogin
+[Tue Sep 22 18:38:25 2026] 127.0.0.1:62924 Closing

@@ -363,6 +363,7 @@ out('========================================================================');
 out(' features created/updated : ' . $featureStats['created'] . ' / ' . $featureStats['updated']);
 out(' module database          : ' . $dbName . ' (user: ' . $dbUser . ')');
 out(' recording directory      : ' . $external['monitor_dir']);
+out(' installed code version   : ' . SMR_VERSION);
 out('');
 if (!empty($usersCreated) && !isset($parsed['root-pass']) && !isset($parsed['admin-pass'])) {
     out(' USER CREDENTIALS (shown only this time - write them down):');
@@ -379,5 +380,16 @@ out('');
 out(' Web panel:  http://YOUR-SERVER/' . basename(SMR_ROOT) . '/index.php   (plain PHP URLs)');
 out(' Log in and change passwords right away.');
 out('========================================================================');
+out('');
+out(' IMPORTANT - restart the web server AND php-fpm now (fpm opcache survives an');
+out(' httpd-only restart and keeps serving the OLD bytecode):');
+out('   systemctl restart httpd');
+out('   systemctl restart php-fpm');
+out(' Then verify the deployed version (must print ' . SMR_VERSION . '):');
+out('   curl -sL http://localhost/' . basename(SMR_ROOT) . '/status.php');
+out(' (the status.php probe prints the code version the web server is really running;');
+out('  -L follows the login redirect the marker page sits behind).');
+out(' If it prints an older version, the web root was not fully replaced -');
+out(' re-extract the tarball into a clean directory (rm -rf the old one first).');
 
 exit(0);

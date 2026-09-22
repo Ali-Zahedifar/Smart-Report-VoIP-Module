@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-<!--app-version <?= e(App::version()) ?>-->
+<!--app-version <?= e(\SmartReport\Core\App::version()) ?>-->
     <meta name="robots" content="noindex,nofollow">
     <title><?= e(isset($title) && $title !== '' ? $title . ' · ' . $brand : $brand) ?></title>
     <link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>">
