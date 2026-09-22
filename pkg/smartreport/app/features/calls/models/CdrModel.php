@@ -14,6 +14,9 @@ class CdrModel
 
     private static $DISPOSITIONS = ['ANSWERED', 'NO ANSWER', 'BUSY', 'FAILED', 'CONGESTION', 'CANCEL'];
 
+    /** Valid direction buckets used by list filters. */
+    public static $DIRECTIONS = ['in', 'out', 'int'];
+
     private static $AUTOMATION_APPS = [
         'VOICEMAIL', 'VOICEMAILMAIN', 'PLAYBACK', 'ANNOUNCEMENT', 'ANSWER',
         'IVR', 'WAIT', 'CONGESTION', 'BUSY', 'HANGUP', 'CONTROLPLAYBACK',
@@ -105,6 +108,35 @@ class CdrModel
     }
 
     /**
+     * Clock-code range used by the employee report (dial 8810-8899 to clock
+     * in/out). These calls are tracking signals, not phone calls: they are
+     * excluded from call facts so they never pollute direction counts or
+     * talk-time stats. Configurable via external.clock_codes {min,max,enabled}.
+     */
+    public static function isClockCode($dst)
+    {
+        $digits = self::digits($dst);
+        if ($digits === '' || strlen($digits) !== 4) {
+            return false;
+        }
+        static $range = null;
+        if ($range === null) {
+            $cfg = \SmartReport\Core\Config::get('external.clock_codes', []);
+            $cfg = is_array($cfg) ? $cfg : [];
+            $range = [
+                'enabled' => !isset($cfg['enabled']) || !empty($cfg['enabled']),
+                'min' => isset($cfg['min']) ? (int) $cfg['min'] : 8810,
+                'max' => isset($cfg['max']) ? (int) $cfg['max'] : 8899,
+            ];
+        }
+        if (!$range['enabled']) {
+            return false;
+        }
+        $num = (int) $digits;
+        return $num >= $range['min'] && $num <= $range['max'];
+    }
+
+    /**
      * Call facts: one classified row per linkedid. All CDR rows of the range are
      * fetched and folded per call in PHP so the "entry" leg is the real origin
      * (lowest sequence, preferring the row whose uniqueid equals the linkedid).
@@ -149,6 +181,9 @@ class CdrModel
             $entry = $this->pickOrigin($lid, $legs);
             $entry['linkedid'] = $lid;
             $entry['leg_count'] = count($legs);
+            if (self::isClockCode(isset($entry['dst']) ? $entry['dst'] : '')) {
+                continue; // clock-code tracking call, not a phone call
+            }
             $fact = $this->classifyEntry($ref, $entry, $legs);
             $fact['legs'] = $legs;
             $facts[] = $fact;
@@ -380,6 +415,61 @@ class CdrModel
         return $out;
     }
 
+    /**
+     * Normalize a CDR number to ASCII digits: converts Persian/Arabic-Indic
+     * digits (۰-۹, ٠-٩) and strips everything that is not 0-9. Bare preg_replace
+     * with /\D/ is multibyte-UNSAFE: it strips Persian digits entirely, which
+     * turned 109۰۳۳۴۳۹۳۶۳ into "109" and classified it as an internal call.
+     */
+    public static function digits($value)
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return '';
+        }
+        $value = strtr($value, [
+                '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+                '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+                '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+                '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+            ]);
+        return preg_replace('/\D/', '', $value);
+    }
+
+    /**
+     * Whether a destination number looks external. A number is external when it
+     * has >= internal_max_length+1 digits (default 4). Trunk peers such as
+     * 11577/21577 (5 digits) are therefore external, while real extensions
+     * (2-4 digits on this site) are not. An explicit "internal" list in
+     * config/external.php always wins, and so does the reference DB, which is
+     * checked first by classifyDirection().
+     */
+    private function isExternalNumber($number)
+    {
+        $number = trim((string) $number);
+        if ($number === '') {
+            return false;
+        }
+        if (preg_match('/^[+*#]/', $number)) {
+            return true;
+        }
+        $digits = self::digits($number);
+        if ($digits === '') {
+            return false;
+        }
+        static $maxLen = null;
+        if ($maxLen === null) {
+            $maxLen = (int) \SmartReport\Core\Config::get('external.internal_max_length', 3);
+            if ($maxLen < 1) {
+                $maxLen = 3;
+            }
+        }
+        if (substr($digits, 0, 1) === '0' && strlen($digits) > 1) {
+            return true;
+        }
+        return strlen($digits) > $maxLen;
+    }
+
     private function classifyEntry(ReferenceRepository $ref, array $entry, $legs = null)
     {
         if ($legs === null) {
@@ -445,15 +535,15 @@ class CdrModel
             return 'in';
         }
 
-        if (preg_match('/^ivr-\d+$/', $ctx) && $ref->isTrunkChannel($channel)) {
+        if (preg_match('/^ivr-[0-9]+$/', $ctx) && $ref->isTrunkChannel($channel)) {
             return 'in';
         }
 
         if ($ctx === 'ext-queues') {
-            if ($ref->isTrunkChannel($channel) && preg_match('/^\d+$/', $dst)) {
+            if ($ref->isTrunkChannel($channel) && preg_match('/^[0-9]+$/', self::digits($dst))) {
                 return 'in';
             }
-            if (!$ref->isInternal($src) && $ref->isInternal(preg_replace('/\D/', '', $dst))) {
+            if (!$ref->isInternal($src) && $ref->isInternal(self::digits($dst))) {
                 return 'in';
             }
             return 'out';
@@ -464,21 +554,40 @@ class CdrModel
         }
 
         if (preg_match('/^from-internal/', $ctx)) {
-            if (!$ref->isInternal(preg_replace('/\D/', '', $dst)) && $this->isExternalNumber($dst)) {
+            $dstDigits = self::digits($dst);
+            // Known internal extension via reference data wins.
+            if ($dstDigits !== '' && $ref->isInternal($dstDigits)) {
+                return 'int';
+            }
+            // If we know the src is internal but the destination is NOT known
+            // internal, fall back to number shape: external-shaped numbers
+            // (>= internal_max_length+1 digits, leading 0, + prefix) are
+            // outbound. This is what keeps trunk peers like 11577/21577 and
+            // full external numbers out of the internal bucket.
+            if ($ref->isInternal(self::digits($src)) && $this->isExternalNumber($dstDigits)) {
+                return 'out';
+            }
+            if (!$ref->isInternal(self::digits($src)) && !$ref->isInternal($dstDigits) && $this->isExternalNumber($dstDigits)) {
                 return 'out';
             }
             return 'int';
         }
 
-        $srcInternal = $ref->isInternal($src);
-        $dstInternal = $ref->isInternal($dst);
-        $dstDid = $ref->isDid($dst);
+        $srcDigits = self::digits($src);
+        $dstDigits = self::digits($dst);
+        $srcInternal = $srcDigits !== '' && $ref->isInternal($srcDigits);
+        $dstInternal = $dstDigits !== '' && $ref->isInternal($dstDigits);
+        $dstDid = $dstDigits !== '' && $ref->isDid($dstDigits);
+
+        // Internal = strictly between two known local extensions. Anything
+        // where one side is not a known extension is inbound/outbound, never
+        // "internal".
+        if ($srcInternal && $dstInternal) {
+            return 'int';
+        }
 
         if (!$srcInternal && ($dstInternal || $dstDid)) {
             return 'in';
-        }
-        if ($srcInternal && $dstInternal) {
-            return 'int';
         }
         if ($srcInternal) {
             return 'out';
@@ -592,23 +701,7 @@ class CdrModel
         return true;
     }
 
-    private function isExternalNumber($number)
-    {
-        $number = trim((string) $number);
-        if ($number === '') {
-            return false;
-        }
-        if (preg_match('/^[+*#]/', $number)) {
-            return true;
-        }
-        if (!preg_match('/^\d+$/', $number)) {
-            return false;
-        }
-        if (substr($number, 0, 1) === '0') {
-            return true;
-        }
-        return strlen($number) >= 6;
-    }
+
 
     private function hasHumanLeg(array $legs)
     {
@@ -763,7 +856,7 @@ class CdrModel
      * Includes: queues, ring groups, direct DID, IVR->ext, overflow to external.
      * Voicemail handled calls are counted as missed with reason 'voicemail'.
      */
-    private function isMissedCall(array $entry, array $legs)
+    public function isMissedCall(array $entry, array $legs)
     {
         // 1. Must be inbound
         $dir = isset($entry['direction']) ? $entry['direction'] : '';
@@ -816,6 +909,9 @@ class CdrModel
         $ref->ensureLoaded();
         $facts = [];
         foreach ($rows as $row) {
+            if (self::isClockCode(isset($row['dst']) ? $row['dst'] : '')) {
+                continue;
+            }
             $row['leg_count'] = 1;
             $row['linkedid'] = isset($row['uniqueid']) ? $row['uniqueid'] : '';
             $facts[] = $this->classifyEntry($ref, $row);

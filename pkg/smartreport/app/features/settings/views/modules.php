@@ -46,9 +46,22 @@
                 <?php endforeach; ?>
             </div>
 
-            <div class="filters-actions">
-                <button class="btn btn-primary" type="submit"><?= e(t('common.save')) ?></button>
-            </div>
         </section>
+
+        <?php $isRoot = isset($isRoot) ? $isRoot : false; ?>
+        <?php if ($isRoot): ?>
+        <section class="card">
+            <h2 class="card-title"><?= e(t('settings.modules.expert')) ?></h2>
+            <label class="check field-check">
+                <input type="checkbox" name="show_legs" value="1"<?= !empty($showLegs) ? ' checked' : '' ?>>
+                <span><?= e(t('settings.modules.show_legs')) ?></span>
+            </label>
+            <p class="field-hint"><?= e(t('settings.modules.show_legs_hint')) ?></p>
+        </section>
+        <?php endif; ?>
+
+        <div class="filters-actions">
+            <button class="btn btn-primary" type="submit"><?= e(t('common.save')) ?></button>
+        </div>
     </form>
 </div>

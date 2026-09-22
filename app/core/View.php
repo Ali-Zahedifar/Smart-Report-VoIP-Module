@@ -61,7 +61,7 @@ final class View
             $data['isRtl'] = Lang::isRtl();
         }
         if (!isset($data['appVersion'])) {
-            $data['appVersion'] = Config::get('app.version', SMR_VERSION);
+            $data['appVersion'] = App::version();
         }
         if (!isset($data['flash'])) {
             $data['flash'] = flash_messages();

@@ -34,15 +34,6 @@ if (!in_array($currentLimit, $limitChoices, true)) {
             <input type="text" id="clid" name="clid" value="<?= e(isset($filters['clid']) ? $filters['clid'] : '') ?>" placeholder="…">
         </div>
         <div class="field">
-            <label for="disposition"><?= e(t('calls.disposition')) ?></label>
-            <select id="disposition" name="disposition">
-                <option value=""><?= e(t('calls.disposition_any')) ?></option>
-                <?php foreach ($dispositions as $disp): ?>
-                    <option value="<?= e($disp) ?>"<?= isset($filters['disposition']) && $filters['disposition'] === $disp ? ' selected' : '' ?>><?= e(t('status.' . $disp)) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="field">
             <label for="limit"><?= e(t('calls.limit')) ?></label>
             <select id="limit" name="limit">
                 <?php foreach ($limitChoices as $choice): ?>

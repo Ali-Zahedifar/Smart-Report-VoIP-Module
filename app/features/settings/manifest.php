@@ -48,6 +48,10 @@ return [
             'SmartReport\Features\Settings\Controllers\SettingsController@modulesSave',
             ['root'],
         ],
+        'GET /settings/ami' => [
+            'SmartReport\Features\Settings\Controllers\SettingsController@ami',
+            ['root', 'admin'],
+        ],
         'GET /settings/profile' => [
             'SmartReport\Features\Settings\Controllers\SettingsController@profile',
             ['root', 'admin', 'viewer'],

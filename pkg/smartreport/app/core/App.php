@@ -43,9 +43,14 @@ final class App
         return self::$reason;
     }
 
+    /**
+     * App version. SMR_VERSION (app/core/bootstrap.php) is the single source
+     * of truth; a stale config/app.php (e.g. left over from an earlier deploy
+     * that was not fully replaced) must never make the panel misreport it.
+     */
     public static function version()
     {
-        return Config::get('app.version', SMR_VERSION);
+        return defined('SMR_VERSION') ? SMR_VERSION : 'unknown';
     }
 
     public static function name()

@@ -170,6 +170,8 @@ class SettingsController extends Controller
             'title' => t('settings.modules.title'),
             'features' => FeatureRegistry::all(),
             'brandName' => App::name(),
+            'showLegs' => (int) App::setting('ui.show_legs', 0) === 1,
+            'user' => Auth::user(),
         ]);
     }
 
@@ -183,6 +185,10 @@ class SettingsController extends Controller
         }
         $currentUser = Auth::user();
         $isRoot = $currentUser !== null && $currentUser['role'] === 'root';
+        if ($isRoot) {
+            // Call-legs expander is an expert feature; hidden by default.
+            App::setSetting('ui.show_legs', $this->post('show_legs', '0') === '1' ? '1' : '0');
+        }
         foreach (FeatureRegistry::all() as $id => $feature) {
             if (!empty($feature['locked']) && !$isRoot) {
                 continue;
@@ -192,6 +198,30 @@ class SettingsController extends Controller
         }
         Audit::log('features_updated', 'enabled=' . implode(',', $enabled));
         $this->redirect('/settings/modules', t('settings.modules.saved'));
+    }
+
+    public function ami()
+    {
+        $ami = new \SmartReport\Services\AmiService();
+        $testOk = null;
+        $testError = '';
+        if ($this->query('test', '') === '1') {
+            try {
+                $channels = $ami->channels();
+                $queues = $ami->queues();
+                $testOk = $ami->enabled() && ($channels !== [] || $queues !== [] || $ami->lastError() === '');
+                $testError = $ami->lastError();
+            } catch (\Exception $e) {
+                $testOk = false;
+                $testError = $e->getMessage();
+            }
+        }
+        $this->view(':features/settings/views/ami', [
+            'title' => t('settings.ami.title'),
+            'ami' => $ami->configMasked(),
+            'amiTestOk' => $testOk,
+            'amiTestError' => $testError,
+        ]);
     }
 
     public function profile()

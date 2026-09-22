@@ -10,26 +10,16 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        // Direction tabs are All / In / Out only: internal traffic has its own
+        // section and missed calls are summarized in their own card.
         $direction = (string) $this->query('dir', '');
-        $allowedDirs = ['in', 'out'];
+        if (!in_array($direction, ['in', 'out'], true)) {
+            $direction = '';
+        }
         $features = \SmartReport\Core\FeatureRegistry::all();
         $internalEnabled = isset($features['internal']) && !empty($features['internal']['enabled']);
         $missedEnabled = isset($features['missed']) && !empty($features['missed']['enabled']);
-        
-        if ($internalEnabled) {
-            $allowedDirs[] = 'int';
-        }
-        if ($missedEnabled) {
-            $allowedDirs[] = 'missed';
-        }
-        
-        if (!in_array($direction, $allowedDirs, true)) {
-            $direction = '';
-        }
-        $focusMissed = $direction === 'missed';
-        if ($focusMissed) {
-            $direction = '';
-        }
+        $focusMissed = false;
 
         $stats = [
             'total' => 0,
@@ -99,7 +89,7 @@ $factsForRecent = $facts;
             'recent' => $recent,
             'missed' => $missed,
             'direction' => $direction !== '' ? $direction : ($focusMissed ? 'missed' : ''),
-            'focusMissed' => $focusMissed,
+            'focusMissed' => false,
             'legacy' => $legacy,
             'refMode' => isset($refMode) ? $refMode : 'patterns',
             'error' => $error,

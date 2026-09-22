@@ -1,4 +1,5 @@
-<?= partial(':features/calls/views/_filters', ['filters' => $filters, 'dispositions' => \SmartReport\Features\Calls\Models\CdrModel::dispositions()]) ?>
+<?php $showLegs = !empty($showLegs); ?>
+<?= partial(':features/calls/views/_filters', ['filters' => $filters, 'dispositions' => []]) ?>
 
 <?php if (!$external): ?>
     <div class="alert alert-error">
@@ -55,15 +56,17 @@
                 <td><span class="badge badge-<?= e(disposition_class(isset($row['outcome']) ? $row['outcome'] : $row['disposition'])) ?>"><?= e(t('status.' . (isset($row['outcome']) ? $row['outcome'] : $row['disposition']))) ?></span></td>
                 <td><span class="badge badge-<?= e(missed_badge_class(isset($row['missedReason']) ? $row['missedReason'] : 'noanswer')) ?>"><?= e(t('missed.' . (isset($row['missedReason']) ? $row['missedReason'] : 'noanswer'))) ?></span></td>
                 <td class="nowrap">
-                    <?php if (!empty($row['recordingUniqueid'])): ?>
+                    <?php if (!empty($row['hasRecording'])): ?>
                         <button type="button" class="btn btn-ghost btn-sm" data-audio-url="<?= e(url('/calls/audio?uniqueid=' . rawurlencode($row['recordingUniqueid']) . '&mode=inline')) ?>" data-audio-title="<?= e(t('missed.title') . ' — ' . $row['calldate']) ?>" title="<?= e(t('calls.play')) ?>">
                             <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>
                         </button>
                         <a class="btn btn-ghost btn-sm" href="<?= e(url('/calls/audio?uniqueid=' . rawurlencode($row['recordingUniqueid']) . '&mode=download')) ?>" title="<?= e(t('calls.download')) ?>">
                             <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         </a>
+                    <?php else: ?>
+                        <span class="muted" title="<?= e(t('calls.no_recording')) ?>">&ndash;</span>
                     <?php endif; ?>
-                    <?php if ((isset($row['leg_count']) ? $row['leg_count'] : 1) > 1): ?>
+                    <?php if ($showLegs && (isset($row['leg_count']) ? $row['leg_count'] : 1) > 1): ?>
                         <button type="button" class="btn btn-ghost btn-sm btn-legs" data-target="#legs-<?= e($row['linkedid']) ?>">
                             <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/></svg>
                             <?= e((int) $row['leg_count']) ?>
@@ -71,7 +74,7 @@
                     <?php endif; ?>
                 </td>
             </tr>
-            <?php if ((isset($row['leg_count']) ? $row['leg_count'] : 1) > 1 && isset($legs[$row['linkedid']])): ?>
+            <?php if ($showLegs && (isset($row['leg_count']) ? $row['leg_count'] : 1) > 1 && isset($legs[$row['linkedid']])): ?>
                 <tr class="legs-row" id="legs-<?= e($row['linkedid']) ?>" style="display: none;">
                     <td colspan="10">
                         <div class="legs-inner">

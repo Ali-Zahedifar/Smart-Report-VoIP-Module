@@ -76,14 +76,14 @@ class ReferenceRepository
     public function isInternal($number)
     {
         $this->ensureLoaded();
-        $key = preg_replace('/\D/', '', (string) $number);
+        $key = \SmartReport\Features\Calls\Models\CdrModel::digits($number);
         return $key !== '' && isset($this->internalExtensions[$key]);
     }
 
     public function isDid($number)
     {
         $this->ensureLoaded();
-        $key = preg_replace('/\D/', '', (string) $number);
+        $key = \SmartReport\Features\Calls\Models\CdrModel::digits($number);
         return $key !== '' && isset($this->didExtensions[$key]);
     }
 

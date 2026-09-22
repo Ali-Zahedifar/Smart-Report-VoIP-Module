@@ -14,7 +14,10 @@ class CallsController extends Controller
 {
     private static $DISPOSITIONS = ['ANSWERED', 'NO ANSWER', 'BUSY', 'FAILED', 'CONGESTION', 'CANCEL'];
 
-    private static $DIRECTIONS = ['in', 'out', 'int'];
+    // 'int' is intentionally not offered in the All Calls filter: internal
+    // traffic lives in its own Internal Calls section. filterFacts() still
+    // accepts it for backward-compatible URLs.
+    private static $DIRECTIONS = ['in', 'out'];
 
     public function index()
     {
@@ -42,6 +45,12 @@ class CallsController extends Controller
                 $result = $model->listings($filters, $perPage, $offset);
                 $rows = $result['rows'];
                 $total = (int) $result['total'];
+
+                $recorder = new RecordingService();
+                foreach ($rows as &$row) {
+                    $row['hasRecording'] = !empty($row['recordingfile']) && $recorder->resolve($row) !== null;
+                }
+                unset($row);
             } else {
                 $facts = $model->factsInRange($filters);
                 $hitCap = count($facts) >= (int) CdrModel::factsCap();
@@ -55,6 +64,14 @@ class CallsController extends Controller
                 $total = count($facts);
                 $paged = array_slice($facts, $offset, $perPage);
                 $rows = $paged;
+
+                // Read-only existence check per row: show play/download only
+                // when the recording file is really on disk.
+                $recorder = new RecordingService();
+                foreach ($rows as &$row) {
+                    $row['hasRecording'] = !empty($row['recordingUniqueid']) && $recorder->resolve($row) !== null;
+                }
+                unset($row);
             }
         } catch (\Exception $e) {
             $external = false;
@@ -76,6 +93,7 @@ class CallsController extends Controller
             'hitCap' => $hitCap,
             'dispositions' => self::$DISPOSITIONS,
             'directions' => self::$DIRECTIONS,
+            'showLegs' => (int) \SmartReport\Core\App::setting('ui.show_legs', 0) === 1,
             'limitChoices' => $choices,
             'queryString' => $this->queryStringForPagination($filters, $perPage),
         ]);

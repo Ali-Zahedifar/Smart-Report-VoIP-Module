@@ -1,3 +1,4 @@
+<?php $showLegs = !empty($showLegs); ?>
 <div class="page">
     <p class="page-subtitle"><?= e(t('calls.subtitle')) ?></p>
 
@@ -111,17 +112,19 @@
                     <?php foreach ($result['rows'] as $row): ?>
                         <?php
                         $audioUrl = '';
+                        $downloadUrl = '';
                         $hasRec = false;
                         $legsRows = [];
                         if ($mode === 'linkedid') {
-                            $hasRec = !empty($row['recordingUniqueid']);
+                            // Server has verified the file exists on disk.
+                            $hasRec = !empty($row['hasRecording']);
                             if ($hasRec) {
                                 $audioUrl = url('/calls/audio?uniqueid=' . rawurlencode($row['recordingUniqueid']) . '&mode=inline');
+                                $downloadUrl = url('/calls/audio?uniqueid=' . rawurlencode($row['recordingUniqueid']) . '&mode=download');
                             }
-                            $downloadUrl = url('/calls/audio?uniqueid=' . rawurlencode($row['recordingUniqueid']) . '&mode=download');
                             $legsRows = isset($row['legs']) && is_array($row['legs']) ? $row['legs'] : (isset($legs[$row['linkedid']]) ? $legs[$row['linkedid']] : []);
                         } else {
-                            $hasRec = isset($row['recordingfile']) && $row['recordingfile'] !== '';
+                            $hasRec = !empty($row['hasRecording']);
                             if ($hasRec) {
                                 $audioUrl = url('/calls/audio?uniqueid=' . rawurlencode($row['uniqueid']) . '&mode=inline');
                                 $downloadUrl = url('/calls/audio?uniqueid=' . rawurlencode($row['uniqueid']) . '&mode=download');
@@ -140,7 +143,7 @@
                             <td><span class="badge badge-<?= e(disposition_class(isset($row['outcome']) ? $row['outcome'] : $row['disposition'])) ?>"><?= e(t('status.' . (isset($row['outcome']) ? $row['outcome'] : $row['disposition']))) ?></span></td>
                             <?php if ($mode === 'linkedid'): ?>
                                 <td class="nowrap">
-                                    <?php if ((int) $row['leg_count'] > 1): ?>
+                                    <?php if ($showLegs && (int) $row['leg_count'] > 1): ?>
                                         <button type="button" class="btn btn-ghost btn-sm btn-legs" data-target="#legs-<?= e($row['linkedid']) ?>"><?= icon('dot', 14) ?> <?= e((int) $row['leg_count']) ?></button>
                                     <?php else: ?>
                                         <span class="text-muted">&ndash;</span>
@@ -158,7 +161,7 @@
                                 <?php endif; ?>
                             </td>
                         </tr>
-                        <?php if ($mode === 'linkedid' && count($legsRows) > 1): ?>
+                        <?php if ($mode === 'linkedid' && $showLegs && count($legsRows) > 1): ?>
                             <tr class="legs-row" id="legs-<?= e($row['linkedid']) ?>">
                                 <td colspan="10">
                                     <div class="legs-inner">

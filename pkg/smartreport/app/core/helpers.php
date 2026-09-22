@@ -38,7 +38,7 @@ function url($path = '/')
 
 function asset($path)
 {
-    return SMR_BASE_URL . '/assets/' . ltrim($path, '/');
+    return SMR_BASE_URL . '/assets/' . ltrim($path, '/') . '?v=' . SMR_ASSET_VER;
 }
 
 /**
@@ -237,6 +237,9 @@ function icon($name, $size = 18)
         'list' => '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
         'filter' => '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/><line x1="14" y1="21" x2="14" y2="3"/>',
         'alert-triangle' => '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 2.86h20.94a2 2 0 0 0 1.71-2.86L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+        'building' => '<rect x="4" y="2" width="16" height="20" rx="1"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M8 10h.01M16 10h.01M12 10h.01M8 14h.01M16 14h.01M12 14h.01"/>',
+        'clock' => '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+        'radio' => '<circle cx="12" cy="12" r="2"/><path d="M4.93 19.07a10 10 0 0 1 0-14.14"/><path d="M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>',
     ];
     $body = isset($icons[$name]) ? $icons[$name] : $icons['dot'];
     return '<svg class="icon" width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $body . '</svg>';

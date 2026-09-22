@@ -4,6 +4,7 @@ namespace SmartReport\Features\Internal\Controllers;
 
 use SmartReport\Core\Controller;
 use SmartReport\Features\Calls\Models\CdrModel;
+use SmartReport\Features\Calls\Services\RecordingService;
 use SmartReport\Features\Calls\Services\ReferenceRepository;
 
 class InternalController extends Controller
@@ -44,6 +45,13 @@ class InternalController extends Controller
             $total = count($facts);
             $paged = array_slice($facts, $offset, $perPage);
             $rows = $paged;
+
+            // Only show play/download when the recording file really exists.
+            $recorder = new RecordingService();
+            foreach ($rows as &$row) {
+                $row['hasRecording'] = !empty($row['recordingUniqueid']) && $recorder->resolve($row) !== null;
+            }
+            unset($row);
         } catch (\Exception $e) {
             $external = false;
             $error = $e->getMessage();
@@ -62,6 +70,7 @@ class InternalController extends Controller
             'error' => $error,
             'mode' => 'linkedid',
             'legacy' => false,
+            'showLegs' => (int) \SmartReport\Core\App::setting('ui.show_legs', 0) === 1,
             'queryString' => $this->queryStringForPagination($filters, $perPage),
         ]);
     }
@@ -69,7 +78,7 @@ class InternalController extends Controller
     private function filtersFromRequest()
     {
         $today = date('Y-m-d');
-        $defaultFrom = date('Y-m-d', strtotime('-6 days'));
+        $defaultFrom = $today; // default range: today only (1 day)
         $dateFrom = $this->normalizeDate($this->query('date_from', $defaultFrom));
         $dateTo = $this->normalizeDate($this->query('date_to', $today));
 

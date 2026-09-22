@@ -320,6 +320,18 @@ foreach (['database', 'external'] as $cfgName) {
 
 out('');
 out('Final checks...');
+
+// Stale-deploy guard: warn when the extracted tree's version differs from a
+// previously installed marker (user upgrading by copying over an old dir).
+$installedMarker = SMR_DATA . '/installed_version';
+$prevVersion = is_file($installedMarker) ? trim((string) file_get_contents($installedMarker)) : '';
+if ($prevVersion !== '' && $prevVersion !== SMR_VERSION) {
+    out('  NOTE: previous install reported version ' . $prevVersion . ', this tree is ' . SMR_VERSION . '.');
+    out('        If the panel still shows the old version afterwards, the web root was');
+    out('        not fully replaced - re-extract the tarball into a clean directory.');
+}
+@file_put_contents($installedMarker, SMR_VERSION);
+
 Database::reset();
 try {
     Database::main()->fetchValue('SELECT 1');

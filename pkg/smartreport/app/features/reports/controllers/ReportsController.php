@@ -118,9 +118,19 @@ class ReportsController extends Controller
                 $counts['unknown']++;
             }
         }
+        // Only render buckets that actually have calls - an all-zero
+        // "unknown" slice on an otherwise clean doughnut is noise.
+        $labels = [];
+        $data = [];
+        foreach ($counts as $k => $v) {
+            if ($v > 0) {
+                $labels[] = t('dir.' . $k);
+                $data[] = $v;
+            }
+        }
         return [
-            'labels' => array_map(function ($k) { return t('dir.' . $k); }, array_keys($counts)),
-            'data' => array_values($counts),
+            'labels' => $labels,
+            'data' => $data,
         ];
     }
 

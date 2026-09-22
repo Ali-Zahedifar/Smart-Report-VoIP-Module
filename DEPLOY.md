@@ -2,6 +2,22 @@
 
 This runbook covers uploading the release to an Issabel 4 or 5 server and validating it after installation. The release has been verified locally end-to-end: every PHP file lints under **real PHP 5.4.45, 5.6.40 and 8.2**, the included `tests/phpcompat.php` harness reports `PASS`, and a full HTTP smoke test of every page and action returned green.
 
+**What's new in 1.1.3:** three new report modules, AMI live monitoring, and version-reporting hardening —
+
+- **Extension Report** (`/ext-report`): per-extension productivity over any date range — total/inbound/outbound/internal call counts, talk time, average talk, missed inbound, first/last call of the day, a talk-by-hour chart, per-extension call detail with recording playback, and CSV export. A call is attributed to every extension that appears on it (origin, destination, or a channel peer such as `SIP/105-…` / `Local/105@…`).
+- **Employee Report** (`/employee-report`): work-time tracking via dial-in **clock codes 8810–8899**. Each employee gets a personal code (root assigns them under *Manage Employees*); dialing the code from any phone toggles a work session — the code call answers and hangs up. Sessions are derived from the CDR when the page loads (no dialplan database writes), so clock calls are excluded from all call reports automatically. The report shows per-employee sessions, total work time, calls, talk time, talk-per-hour, missed inbound and a live clocked-in/out status, with per-employee detail and CSV export.
+- **Live Report** (`/live`): current calls and queue state from the **Asterisk Manager Interface** — active/talking/ringing/waiting counters, per-channel state and duration, queue member states and waiting callers, auto-refreshing every 5 s. Root can enable **listen / whisper / barge** (expert feature, off by default; maximum mode selectable): pressing Listen opens a muted private channel on the admin's own phone via AMI `ChanSpy` with `qS/wqS/WqS` options — the spied parties never hear the join tone. Every spy action is audit-logged. AMI credentials live in `config/external.php` (`external.ami`) and a full setup guide (manager.conf template) ships in **Settings → AMI**.
+- **Version reporting hardened.** The panel version now always comes from the code constant `SMR_VERSION` — a stale `config/app.php` (the most likely cause of a deploy reporting 1.1.1 after installing 1.1.2) can no longer misreport it. The layout HTML carries an `<!--app-version x.y.z-->` marker for instant verification (View Source), assets are cache-busted with `?v=`, and the installer writes `data/installed_version` and warns when it differs from the tree being installed.
+
+**What's new in 1.1.2:** customer-feedback batch from the first production deploy —
+
+- **Graphical Reports render again.** A private-method visibility bug (`CdrModel::isMissedCall()` called from the reports controller) made `/reports/data` return HTTP 500, so every chart sat empty with the loading state dismissed. The method is now public; the data endpoint answers JSON again.
+- **Internal-call classification fixed.** Trunk peers (e.g. `11577`, `21577`), full external numbers and Persian-digit CLIDs (e.g. `109۰۳۳۴۳۹۳۶۳`) no longer show up as "internal" calls: numbers are normalized to ASCII digits first (the old code silently stripped Persian digits, turning `109۰۳۳۴۳۹۳۶۳` into `109`), and "internal" now requires *both* sides to be known local extensions — anything else is inbound/outbound. The threshold is configurable via `internal_max_length` in `config/external.php` (default 3).
+- **Honest recording buttons.** Play/Download now appear only when the recording file actually exists on disk (server-side check); everything else shows a muted "No recording" dash — on All Calls, Missed and Internal lists alike.
+- **Call-legs expander is now opt-in.** The per-call legs table is a VoIP-expert diagnostic, so it is hidden by default; root can re-enable it under Settings → Module Options → Expert options (`ui.show_legs`).
+- **Simplified lists.** The dashboard direction tabs are All / Incoming / Outgoing only (internal traffic has its own section, missed calls their own card); the All Calls filter no longer offers "Internal"; the Missed list no longer offers a Status dropdown (only unanswered outcomes exist there by definition).
+- **Defaults & cosmetics.** Missed/Internal lists default to today (1 day) instead of 7 days; Internal Calls gets a proper building icon instead of a funnel; the direction doughnut only renders non-zero buckets.
+
 **What's new in 1.1.1:** fixes and refinements to the call-center reporting UI —
 
 - **Queue Report detail links fixed.** The "View Detail" link could lose its `queue=` parameter (an empty `queue=` from the shared filter string overrode the real value), producing a "Queue not specified" redirect. The explicit queue now always wins; the detail heading renders correctly in both languages.
@@ -17,12 +33,12 @@ This runbook covers uploading the release to an Issabel 4 or 5 server and valida
 
 ## Artifact
 
-- `dist/smartreport-1.1.1.tar.gz` — the release archive.
+- `dist/smartreport-1.1.3.tar.gz` — the release archive.
 
-The SHA256 checksum is provided alongside the artifact in `dist/smartreport-1.1.1.tar.gz.sha256`. Verify it after upload:
+The SHA256 checksum is provided alongside the artifact in `dist/smartreport-1.1.3.tar.gz.sha256`. Verify it after upload:
 
 ```bash
-sha256sum -c /root/smartreport-1.1.1.tar.gz.sha256   # run from the directory containing the tarball
+sha256sum -c /root/smartreport-1.1.3.tar.gz.sha256   # run from the directory containing the tarball
 ```
 
 The archive extracts to a single `smartreport/` directory and contains **no** `config/database.php`, `config/external.php`, caches, logs, exports, or local agent notes (`agents.md`) — the installer generates the config files on the server.
@@ -33,7 +49,7 @@ The release tarball is built from `pkg/smartreport/` (the packaging source) by t
 
 ```bash
 scripts/build.sh             # rebuild the current version
-scripts/build.sh 1.1.2       # bump SMR_VERSION + config/app.php, then build
+scripts/build.sh 1.1.3       # bump SMR_VERSION + config/app.php, then build
 ```
 
 The script mirrors the repository into `pkg/smartreport`, produces `dist/smartreport-<version>.tar.gz` + `.sha256`, verifies the artifact (exclusions, extracted content, carried version) and runs the PHP compatibility harness. Builds are reproducible: identical sources yield a byte-identical tarball.
@@ -51,13 +67,13 @@ The script mirrors the repository into `pkg/smartreport`, produces `dist/smartre
 ## 1. Upload (WinSCP)
 
 1. Connect to the server with WinSCP over SFTP/SCP as `root`.
-2. Drag `dist/smartreport-1.1.1.tar.gz` to `/root/`.
+2. Drag `dist/smartreport-1.1.3.tar.gz` to `/root/`.
 
 ## 2. Extract and set permissions (SSH)
 
 ```bash
 cd /var/www/html
-tar -xzf /root/smartreport-1.1.1.tar.gz
+tar -xzf /root/smartreport-1.1.3.tar.gz
 chown -R asterisk:asterisk /var/www/html/smartreport
 chmod -R 775 /var/www/html/smartreport/data /var/www/html/smartreport/storage
 ```
@@ -75,7 +91,7 @@ The first release published to this server shipped with class files in `app/core
 ```bash
 cd /var/www/html
 rm -rf /var/www/html/smartreport
-tar -xzf /root/smartreport-1.1.1.tar.gz
+tar -xzf /root/smartreport-1.1.3.tar.gz
 chown -R asterisk:asterisk /var/www/html/smartreport
 chmod -R 775 /var/www/html/smartreport/data /var/www/html/smartreport/storage   # created by the installer
 ```
@@ -165,7 +181,7 @@ sudo -u asterisk ls -la /var/spool/asterisk/monitor/$(date +%Y)/$(date +%m)/$(da
 mysqldump smartreport > /root/smartreport-backup-$(date +%F).sql
 # extract the new archive over the existing folder, keeping config/database.php and config/external.php
 cd /var/www/html
-tar -xzf /root/smartreport-1.1.1.tar.gz
+tar -xzf /root/smartreport-1.1.3.tar.gz
 cd smartreport
 sudo php install/installer.php --non-interactive --mysql-user=root --mysql-pass='YOUR-ROOT-DB-PASS'
 ```

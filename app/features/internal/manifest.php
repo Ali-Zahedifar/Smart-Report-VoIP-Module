@@ -7,7 +7,7 @@ return [
     'description' => 'View and filter internal calls',
     'menu' => [
         'label' => 'internal',
-        'icon' => 'filter',
+        'icon' => 'building',
         'route' => '/internal',
         'order' => 25,
     ],
